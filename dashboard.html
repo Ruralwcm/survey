@@ -96,11 +96,10 @@
       <div class="hdr-acts">
         <button class="hdr-btn" onclick="refreshData()" title="Đồng bộ dữ liệu mới nhất">🔄</button>
         <button class="hdr-btn" onclick="hardRefresh()" title="Tải lại toàn bộ (xóa cache)">⚡</button>
-        <button class="hdr-btn" onclick="showImport()" title="Khai báo CH khảo sát">📥 Import</button>
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.27</b> · <span id="storeStatus" style="font-size:12px"></span></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.28</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -128,7 +127,6 @@
         <input id="fSearch" placeholder="Tìm mã SAP / tên CH..." oninput="renderTable()">
       </div>
     </div>
-    <div class="err" id="tErr"></div>
     <div class="card">
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span>
         <span style="float:right;display:flex;gap:6px">
@@ -137,14 +135,14 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.27</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.28</span></div>
   </div>
 </div>
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec';
 const SID = new URLSearchParams(location.search).get('survey') || new URLSearchParams(location.search).get('s') || '';
-let CFG = null, ROWS = [], STORES = [], TARGET = { saps: [], loaded: false };
+let CFG = null, ROWS = [], STORES = [];
 let TOKEN = sessionStorage.getItem('sv_token_' + SID) || '';
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -198,7 +196,6 @@ async function enterando(){
   buildMien();
   if(ok){ try{ $('storeStatus').textContent = '✅ ' + STORES.length + ' CH'; render(); }catch(e){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--red)">Lỗi render: ' + esc((e && e.message) || e) + '</div>'; $('tableWrap').innerHTML = '<div class="empty" style="color:var(--red)">Lỗi JS — F12 mở Console</div>'; } }
   else { $('storeStatus').textContent = '❌ Lỗi tải CH'; $('tableWrap').innerHTML = '<div class="empty" style="color:var(--red)">Chưa tải được danh sách CH — bấm ⚡ để thử lại</div>'; }
-  loadTargets().catch(()=>{});
 }
 
 function buildMien(){
@@ -225,48 +222,7 @@ function buildCh(){
   $('selCh').innerHTML = '<option value="">— Cửa hàng —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
 }
 
-async function loadTargets(){
-  try{ const r = await call({action:'getTargets',id:SID});
-    if(r.ok){ TARGET.saps = r.saps || []; TARGET.loaded = true; } }catch(e){}
-  renderTargetList();
-  render();
-}
-function pasteTargets(){
-  const tp = $('tPaste'); if(!tp) return;
-  const raw = tp.value; if(!raw.trim()) return;
-  const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
-  let added = 0;
-  saps.forEach(sap => { if(!TARGET.saps.includes(sap)){ TARGET.saps.push(sap); added++; } });
-  $('tPaste').value = ''; if(added) renderTargetList();
-}
-function renderTargetList(){
-  const box = $('tList');
-  if(!box) return;
-  if(!TARGET.saps.length){
-    box.innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>';
-    return;
-  }
-  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">';
-  TARGET.saps.forEach((sap,i) => {
-    const s = STORES.find(x=>x.sap===sap) || {};
-    html += `<span style="display:inline-flex;align-items:center;gap:6px;background:#eef3fb;padding:4px 10px;border-radius:16px;font-size:12.5px;font-weight:500">
-      ${esc(sap)} · ${esc(s.ten||'?')} · ${esc(s.gdv||'')}
-      <b style="cursor:pointer;color:var(--red);margin-left:2px" onclick="TARGET.saps.splice(${i},1);renderTargetList()">✕</b></span>`;
-  });
-  html += '</div>';
-  box.innerHTML = html;
-}
-async function saveTargets(){
-  $('tErr').style.display='none';
-  try{
-    const r = await call({action:'setTargets',id:SID, saps:TARGET.saps});
-    if(r.ok){ $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent = '✅ Đã lưu ' + r.count + ' CH mục tiêu'; render(); }
-    else { $('tErr').style.display='block'; $('tErr').textContent=r.error||'Lỗi'; }
-  }catch(e){ $('tErr').style.display='block'; $('tErr').textContent='Lỗi kết nối'; }
-}
-
 function scopeSaps(){
-  if(TARGET.saps.length) return new Set(TARGET.saps);
   const m=$('selMien').value, v=$('selVung').value, q=$('selQlkv').value, c=$('selCh').value;
   let s = STORES.filter(x=>(!m||x.mien===m)&&(!v||x.gdv===v)&&(!q||x.qlkv===q)&&(!c||x.sap===c));
   return new Set(s.map(x=>x.sap));
@@ -287,10 +243,8 @@ function render(){
   const total = scopeSaps().size;
   const done = new Set(scoped.map(r=>r.sap)).size;
   const alert = scoped.filter(isWarn).length;
-  const hasTargets = TARGET.loaded && TARGET.saps.length > 0;
 
   $('kTotal').textContent = total || '—';
-  $('kTotal').parentElement.querySelector('.l').textContent = hasTargets ? 'CH mục tiêu' : 'Tổng CH';
   $('kDone').textContent = done;
   const pct = total ? Math.round(done/total*100) : 0;
   $('kPct').textContent = pct + '%';
@@ -410,7 +364,7 @@ function renderTable(){
 async function refreshData(){
   try{ const res = await call({action:'getResults',id:SID,token:TOKEN});
     if(res.ok){ ROWS = res.rows || []; CFG = res.config; $('updated').textContent = new Date().toLocaleString('vi-VN'); render(); }
-    else showErr('Lỗi đồng bộ'); }catch(e){ showErr('Không kết nối được'); }
+    else { $('storeStatus').textContent = '❌ Lỗi đồng bộ'; } }catch(e){ $('storeStatus').textContent = '❌ Không kết nối'; }
 }
 function hardRefresh(){
   sessionStorage.removeItem('sv_stores_'+SID);
@@ -422,7 +376,7 @@ function exportMissing(){
   const set = scopeSaps();
   const doneSet = new Set(scopedRows().map(r=>r.sap));
   const missing = STORES.filter(s=>set.has(s.sap) && !doneSet.has(s.sap));
-  if(!missing.length){ showErr('Tất cả CH đã được khảo sát ✅'); return; }
+  if(!missing.length){ $('storeStatus').textContent = '✅ Tất cả CH đã được khảo sát'; return; }
   const hdr = ['Mã SAP','Tên CH','Tỉnh/TP','Huyện','QLKV','GĐV'];
   const rows = missing.map(s=>[s.sap,s.ten,s.tinh,s.huyen,s.qlkv,s.gdv]);
   const csv = '\uFEFF' + hdr.join(',') + '\n' + rows.map(r=>r.map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
@@ -437,7 +391,7 @@ function exportDetail(){
   const scoped = scopedRows();
   const q = ($('fSearch').value||'').trim().toLowerCase();
   const list = scoped.filter(r => !q || (r.ten||'').toLowerCase().includes(q) || (r.sap||'').toLowerCase().includes(q) || (r.qlkv||'').toLowerCase().includes(q));
-  if(!list.length){ showErr('Không có dữ liệu để xuất'); return; }
+  if(!list.length){ $('storeStatus').textContent = '❌ Không có dữ liệu để xuất'; return; }
   const hdr = ['Thời gian','Mã SAP','Tên CH','Tỉnh','QLKV','GĐV'];
   (CFG.fields||[]).forEach(f => hdr.push(f.label));
   if(CFG.sum){ hdr.push(CFG.sum.label||'Tổng'); hdr.push('Trạng thái'); }
@@ -454,32 +408,7 @@ function exportDetail(){
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-function showErr(msg){ $('tErr').textContent = msg; $('tErr').style.display = 'block'; $('tErr').style.color = 'var(--red)'; }
-function showImport(){ const ov = $('importOverlay'); if(!ov) return; ov.style.display = 'flex'; $('importSaps').value = ''; }
-async function importAllSites(){
-  const saps = [...scopeSaps()];
-  TARGET.saps = saps;
-  const ov = $('importOverlay'); if(ov) ov.style.display = 'none';
-  try{
-    const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
-    if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
-    else showErr(r.error||'Lỗi');
-  }catch(e){ showErr('Lỗi kết nối'); }
-}
-async function importPasted(){
-  const imp = $('importSaps'); if(!imp) return;
-  const raw = imp.value; if(!raw.trim()) return;
-  const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
-  TARGET.saps = saps;
-  const ov = $('importOverlay'); if(ov) ov.style.display = 'none';
-  try{
-    const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
-    if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
-    else showErr(r.error||'Lỗi');
-  }catch(e){ showErr('Lỗi kết nối'); }
-}
-
-function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null; TARGET={saps:[],loaded:false};
+function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null;
   $('dash').style.display='none'; $('loginBox').style.display='block'; $('pwd').value=''; }
 
 $('selMien').addEventListener('change', ()=>{ buildVung(); render(); });
@@ -496,17 +425,5 @@ $('selCh').addEventListener('change', render);
   if(SID){ try{ const s = await call({action:'getSurvey', id:SID}); if(s.ok) $('loginSub').textContent = s.config.title; }catch(e){} }
 })();
 </script>
-<div class="overlay" id="importOverlay" style="display:none">
-    <div class="modal">
-      <h3>📥 Khai báo CH khảo sát</h3>
-      <button class="btn" style="margin-bottom:10px;background:var(--navy)" onclick="importAllSites()">📋 Import tất cả CH (mặc định)</button>
-      <div style="border-top:1px solid var(--line);padding-top:10px;margin-bottom:6px">
-        <label style="font-size:11.5px;font-weight:600;color:var(--mut);margin-bottom:6px">Hoặc dán mã SAP cụ thể</label>
-        <textarea id="importSaps" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
-        <button class="btn" style="margin-top:6px;background:var(--navy)" onclick="importPasted()">📋 Import danh sách trên</button>
-      </div>
-      <button class="btn2 ghost" style="margin-top:8px" onclick="$('importOverlay').style.display='none'">Đóng</button>
-    </div>
-  </div>
 </body>
 </html>
