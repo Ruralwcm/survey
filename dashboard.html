@@ -82,7 +82,10 @@
   <div class="card login" id="loginBox">
     <h2>🔐 Đăng nhập Dashboard</h2>
     <p style="font-size:13px;color:var(--mut)" id="loginSub">Nhập mật khẩu để xem tiến độ</p>
-    <input id="pwd" type="password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')login()">
+    <div style="position:relative">
+      <input id="pwd" type="password" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')login()" style="padding-right:44px">
+      <span onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;user-select:none" id="pwdEye" title="Hiện/ẩn mật khẩu">👁️</span>
+    </div>
     <button class="btn" onclick="login()">Đăng nhập</button>
     <div class="err" id="loginErr">Sai mật khẩu, thử lại</div>
   </div>
@@ -128,7 +131,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.4</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.5</span></div>
   </div>
 </div>
 
@@ -144,6 +147,12 @@ const distinct = a => [...new Set(a)].sort((x,y)=>String(x).localeCompare(String
 async function call(data){
   const r = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) });
   return r.json();
+}
+
+function togglePwd(){
+  const p = $('pwd'), e = $('pwdEye');
+  if(p.type === 'password'){ p.type = 'text'; e.textContent = '🙈'; }
+  else { p.type = 'password'; e.textContent = '👁️'; }
 }
 
 async function login(){
