@@ -100,7 +100,7 @@
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.26</b> · <span id="storeStatus" style="font-size:12px"></span></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.27</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -137,7 +137,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.26</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.27</span></div>
   </div>
 </div>
 
@@ -338,7 +338,7 @@ function buildGdvSection(){
       const qwarn = rQ.filter(isWarn).length;
       const qsum = rQ.reduce((a,r)=>a+(r.total||0),0);
       html += `<tr class="gdv-sub ${cls}" style="display:none">
-        <td class="left col-gdv qlkv-name">${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
+        <td class="left col-gdv"><span class="ar" style="visibility:hidden">▶</span> ${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
         <td class="bar-cell col-bar"><i style="width:${qpct}%"></i></td><td class="col-pct">${qpct}%</td>
         <td class="col-warn" style="color:${qwarn?'var(--red)':'inherit'}">${qwarn||'—'}</td><td class="col-sum">${qsum||'—'}</td></tr>`;
     });
