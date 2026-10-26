@@ -159,8 +159,26 @@ function render(){
     html += `<tr><td style="white-space:nowrap">${esc(r.ts)}</td><td>${esc(r.sap)}</td><td>${esc(r.ten)}</td><td>${esc(r.tinh)}</td><td>${esc(r.qlkv)}</td><td>${esc(r.gdv)}</td>`;
     (CFG.fields||[]).forEach(f => {
       const v = r[f.key];
-      if(f.type === 'radio') html += `<td>${v==='Cháy'||v==='Hoạt động' ? esc(v) : esc(v)}</td>`;
-      else html += `<td>${esc(v)}</td>`;
+      if(f.type === 'image'){
+        const links = String(v||'').split('\n').filter(Boolean);
+        if(!links.length){ html += '<td></td>'; }
+        else {
+          html += '<td>' + links.map((l,i)=>{
+            const m = (l||'').match(/\/d\/([^/]+)/);
+            const thumb = m ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200' : '';
+            return thumb
+              ? `<a href="${esc(l)}" target="_blank"><img src="${thumb}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></a>`
+              : `<a href="${esc(l)}" target="_blank">Ảnh ${i+1}</a>`;
+          }).join(' ') + '</td>';
+        }
+      } else if(f.type === 'url'){
+        html += `<td>${v ? `<a href="${esc(v)}" target="_blank" style="color:var(--navy)">🔗 Mở link</a>` : ''}</td>`;
+      } else if(f.type === 'rating'){
+        const n = Math.max(1, Math.min(5, +v || 0));
+        html += `<td>${v ? ('★'.repeat(n) + '☆'.repeat(5-n)) : ''}</td>`;
+      } else {
+        html += `<td>${esc(v)}</td>`;
+      }
     });
     if(CFG.sum) html += `<td class="num" style="color:${w?'var(--red)':'inherit'}">${r.total}</td><td>${w?'<span class="tag warn">⚠️ '+esc(r.warn||'')+'</span>':'<span class="tag ok">OK</span>'}</td>`;
     html += '</tr>';
