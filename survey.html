@@ -11,81 +11,55 @@
     --bg:#f4f6fb; --card:#fff; --line:#e5e9f2; --txt:#1c2434; --mut:#6b7280; }
   *{box-sizing:border-box; margin:0; padding:0}
   body{font-family:'Be Vietnam Pro',system-ui,sans-serif; background:var(--bg); color:var(--txt);
-    min-height:100vh; padding:10px; -webkit-font-smoothing:antialiased}
+    min-height:100vh; padding:16px; -webkit-font-smoothing:antialiased}
   .wrap{max-width:560px; margin:0 auto}
-  .head{background:linear-gradient(135deg,var(--navy),#2c4a8a); color:#fff; border-radius:14px;
-    padding:14px 16px; box-shadow:0 6px 18px rgba(26,60,110,.16)}
-  .head h1{font-size:17px; font-weight:800; line-height:1.3}
-  .head p{font-size:11.5px; opacity:.85; margin-top:4px}
-  .badge{display:inline-block; background:rgba(255,255,255,.16); padding:3px 9px; border-radius:16px;
-    font-size:11px; margin-top:8px}
-  .card{background:var(--card); border-radius:12px; padding:14px; margin-top:10px;
-    box-shadow:0 1px 6px rgba(20,30,60,.04); border:1px solid var(--line)}
-  .card h2{font-size:14px; font-weight:700; color:var(--navy); margin-bottom:10px}
-  label{font-size:11.5px; font-weight:600; color:var(--mut); display:block; margin:8px 0 4px}
-  input,select,textarea{width:100%; font-size:14px; font-family:inherit; padding:10px 12px;
+  .head{background:linear-gradient(135deg,var(--navy),#2c4a8a); color:#fff; border-radius:16px;
+    padding:20px 20px 22px; box-shadow:0 8px 24px rgba(26,60,110,.18)}
+  .head h1{font-size:21px; font-weight:800; line-height:1.3}
+  .head p{font-size:13px; opacity:.85; margin-top:6px}
+  .badge{display:inline-block; background:rgba(255,255,255,.16); padding:4px 10px; border-radius:20px;
+    font-size:12px; margin-top:10px}
+  .card{background:var(--card); border-radius:14px; padding:18px; margin-top:14px;
+    box-shadow:0 2px 10px rgba(20,30,60,.06); border:1px solid var(--line)}
+  .card h2{font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px}
+  label{font-size:12.5px; font-weight:600; color:var(--mut); display:block; margin:12px 0 6px}
+  input,select,textarea{width:100%; font-size:15px; font-family:inherit; padding:12px 14px;
     border:1.5px solid var(--line); border-radius:10px; background:#fafbfd; color:var(--txt); outline:none}
   input:focus,select:focus,textarea:focus{border-color:var(--navy); background:#fff}
-  .store-info{margin-top:10px}
-  .st-line{font-size:12.5px; font-weight:600; color:var(--txt); margin:2px 0}
-  .cas{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-  .cas select{width:100%}
-  .cas label{margin:0 0 3px}
-  .sec{border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:10px; background:#fff}
-  .sec .st{display:flex; align-items:center; gap:10px}
-  .sec .st .name{flex:1; font-size:13.5px; font-weight:700}
-  .radios{display:flex; gap:6px; flex-wrap:wrap}
-  .radios label{margin:0; font-size:12px; font-weight:600; color:#4b5563; cursor:pointer;
-    padding:7px 12px; border:1.5px solid var(--line); border-radius:18px; background:#fff; white-space:nowrap}
+  .store-info{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px}
+  .store-info .it{background:#f6f8fc; border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+  .store-info .it .k{font-size:11px; color:var(--mut); margin-bottom:2px}
+  .store-info .it .v{font-size:14px; font-weight:600}
+  .maplink{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--navy);
+    text-decoration:none; background:#eef3fb; padding:9px 14px; border-radius:10px}
+  .sec{border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:12px; background:#fff}
+  .sec .st{display:flex; align-items:center; gap:14px}
+  .sec .st .name{flex:1; font-size:14.5px; font-weight:700}
+  .radios{display:flex; gap:8px; flex-wrap:wrap}
+  .radios label{margin:0; font-size:13px; font-weight:600; color:#4b5563; cursor:pointer;
+    padding:8px 14px; border:1.5px solid var(--line); border-radius:20px; background:#fff; white-space:nowrap}
   .radios input{display:none}
   .radios label:has(input:checked){border-color:var(--navy); color:var(--navy); background:#eef3fb}
-  .num{display:none; margin-top:8px}
+  .num{display:none; margin-top:10px}
   .num.show{display:block}
-  .num input{max-width:130px; font-size:15px; font-weight:700}
-  .sum{background:linear-gradient(135deg,var(--gold),#ffd54f); border-radius:12px; padding:12px 14px;
-    margin-top:10px; display:flex; align-items:center; gap:10px}
-  .sum .big{font-size:24px; font-weight:800; line-height:1}
-  .sum .lbl{font-size:12px; font-weight:600; color:#5c4a00}
-  .warn{display:none; background:var(--red); color:#fff; border-radius:10px; padding:10px 14px;
-    margin-top:8px; font-weight:700; font-size:13px; line-height:1.4}
+  .num input{max-width:160px; font-size:16px; font-weight:700}
+  .sum{background:linear-gradient(135deg,var(--gold),#ffd54f); border-radius:14px; padding:18px;
+    margin-top:14px; display:flex; align-items:center; gap:14px}
+  .sum .big{font-size:30px; font-weight:800; line-height:1}
+  .sum .lbl{font-size:13px; font-weight:600; color:#5c4a00}
+  .warn{display:none; background:var(--red); color:#fff; border-radius:12px; padding:14px 16px;
+    margin-top:12px; font-weight:700; font-size:14px; line-height:1.45}
   .warn.show{display:block; animation:shake .4s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-  .btn{width:100%; margin-top:12px; background:var(--red); color:#fff; border:none; border-radius:11px;
-    padding:13px; font-size:15px; font-weight:800; font-family:inherit; cursor:pointer;
-    box-shadow:0 5px 14px rgba(215,25,32,.28); transition:.15s}
+  .btn{width:100%; margin-top:16px; background:var(--red); color:#fff; border:none; border-radius:12px;
+    padding:15px; font-size:16px; font-weight:800; font-family:inherit; cursor:pointer;
+    box-shadow:0 6px 18px rgba(215,25,32,.3); transition:.15s}
   .btn:active{transform:scale(.98)} .btn:disabled{opacity:.5; cursor:not-allowed}
-  .toast{position:fixed; left:50%; bottom:20px; transform:translateX(-50%) translateY(80px);
-    background:#166534; color:#fff; padding:11px 20px; border-radius:10px; font-weight:600; font-size:13px;
-    transition:.3s; box-shadow:0 6px 18px rgba(0,0,0,.18); z-index:50}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(80px);
+    background:#166534; color:#fff; padding:13px 22px; border-radius:12px; font-weight:600; font-size:14px;
+    transition:.3s; box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:50}
   .toast.show{transform:translateX(-50%) translateY(0)}
-  .foot{text-align:center; color:var(--mut); font-size:11px; margin-top:16px}
-  /* extra field types */
-  .cboxes{display:flex; flex-direction:column; gap:5px; margin-top:4px}
-  .cboxes label{display:flex; align-items:center; gap:8px; margin:0; font-size:13px; font-weight:500;
-    color:var(--txt); cursor:pointer}
-  .cboxes input{width:auto}
-  .uploadlabel{display:inline-block; padding:8px 14px; background:#eef3fb; border:1.5px dashed var(--navy);
-    border-radius:8px; color:var(--navy); font-weight:600; font-size:12px; cursor:pointer; margin-top:6px}
-  .thumbs{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
-  .thumb{position:relative}
-  .thumb img{width:72px; height:72px; object-fit:cover; border-radius:8px; border:1px solid var(--line)}
-  .thumb .del{position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff; border-radius:50%;
-    width:18px; height:18px; line-height:16px; text-align:center; font-size:11px; cursor:pointer; font-weight:700}
-  .stars{display:flex; gap:2px; margin-top:6px; font-size:24px; cursor:pointer; user-select:none}
-  .stars span{color:#d9dde5; transition:.1s}
-  .stars span.on{color:var(--gold)}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
-    z-index:999; padding:14px}
-  .modal{background:#fff;border-radius:14px;padding:18px;max-width:420px;width:100%;box-shadow:0 16px 40px rgba(0,0,0,.2)}
-  .modal h3{font-size:15px;font-weight:800;margin-bottom:12px;color:var(--navy)}
-  .modal .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
-  .modal .row .l{color:var(--mut)} .modal .row .r{font-weight:600}
-  .btn2{flex:1;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
-  .btn2.ghost{background:#f0f2f7;color:var(--txt)} .btn2.act{background:var(--navy);color:#fff}
-  .success{background:#e6f6ec;border:1.5px solid var(--green);border-radius:12px;padding:16px;margin-top:12px;text-align:center}
-  .success .ok{font-size:15px;font-weight:800;color:var(--green);margin-bottom:4px}
-  .success .d{font-size:12px;color:var(--mut);margin-bottom:10px}
-  @media(max-width:400px){.cas{grid-template-columns:1fr}body{padding:6px}}
+  .foot{text-align:center; color:var(--mut); font-size:11.5px; margin-top:20px}
 </style>
 </head>
 <body>
@@ -97,17 +71,17 @@
   </div>
 
   <div class="card">
-    <h2>1️⃣ Khai báo cửa hàng</h2>
-    <div class="cas">
-      <div><label>Miền</label><select id="selMien"><option value="">— Miền —</option></select></div>
-      <div><label>Vùng (GĐV)</label><select id="selVung"><option value="">— Vùng —</option></select></div>
-      <div><label>QLKV</label><select id="selQlkv"><option value="">— QLKV —</option></select></div>
-      <div><label>Cửa hàng</label><select id="selCh"><option value="">— CH —</option></select></div>
-    </div>
+    <h2>1️⃣ Chọn cửa hàng</h2>
+    <label for="storeSearch">Tìm theo Mã SAP hoặc Tên cửa hàng</label>
+    <input id="storeSearch" list="storeList" placeholder="Nhập tên hoặc mã SAP..." autocomplete="off">
+    <datalist id="storeList"></datalist>
     <div class="store-info">
-      <div class="st-line" id="vLine1">—</div>
-      <div class="st-line" id="vLine2">—</div>
+      <div class="it"><div class="k">Tỉnh/TP</div><div class="v" id="vTinh">—</div></div>
+      <div class="it"><div class="k">Quận/Huyện</div><div class="v" id="vHuyen">—</div></div>
+      <div class="it"><div class="k">QLKV</div><div class="v" id="vQlkv">—</div></div>
+      <div class="it"><div class="k">GĐV</div><div class="v" id="vGdv">—</div></div>
     </div>
+    <a id="mapLink" href="#" target="_blank" style="display:none" class="maplink">📍 Xem vị trí cửa hàng trên bản đồ</a>
   </div>
 
   <div class="card">
@@ -122,35 +96,23 @@
   <div class="warn" id="warnBox"></div>
 
   <button class="btn" id="btnSubmit" disabled>Gửi kết quả</button>
-  <div class="success" id="successBox" style="display:none">
-    <div class="ok">✅ Đã hoàn thành khảo sát!</div>
-    <div class="d" id="successDetail"></div>
-    <button class="btn" style="background:var(--navy);margin-top:6px" onclick="resetForm()">🔍 Khảo sát cửa hàng khác</button>
+
+  <div class="card" id="unsurveyedCard" style="display:none">
+    <h2>📋 CH chưa khảo sát — <span id="unsurveyedQlkv"></span></h2>
+    <div id="unsurveyedList" style="max-height:360px;overflow-y:auto;font-size:13px;line-height:1.6"></div>
   </div>
+
   <div class="foot" id="foot"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Popup xác nhận gửi -->
-<div class="overlay" id="confirmOverlay" style="display:none">
-  <div class="modal">
-    <h3>📋 Xác nhận kết quả khảo sát</h3>
-    <div id="confirmBody"></div>
-    <div style="display:flex;gap:10px;margin-top:16px">
-      <button class="btn2 ghost" onclick="$('confirmOverlay').style.display='none'">🔙 Quay lại</button>
-      <button class="btn2 act" onclick="doSubmit()">✅ Xác nhận gửi</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ⚠️ Dán URL Web App (Survey Engine) vào đây:
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec';
-const _qp = new URLSearchParams(location.search);
-const SURVEY_ID = _qp.get('survey') || _qp.get('s') || '';
+const GAS_URL = '__GAS_URL__';
+const SURVEY_ID = new URLSearchParams(location.search).get('survey') || '';
 
-let CFG = null, STORES = [], selectedStore = null, IMG = {};
+let CFG = null, STORES = [], selectedStore = null;
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -176,10 +138,11 @@ async function init(){
     if(CFG.region){ $('regionBadge').textContent = '📍 ' + CFG.region; $('regionBadge').style.display='inline-block'; }
     document.title = CFG.title;
 
-    // load toàn bộ CH để dựng droplist Miền → Vùng → QLKV → CH
-    const st2 = await call({action:'getStores', region:''});
+    // load stores với region đúng
+    const st2 = await call({action:'getStores', region:CFG.region || ''});
     if(st2.ok) STORES = st2.stores || [];
-    buildMien();
+    const dl = $('storeList');
+    dl.innerHTML = STORES.map(s=>`<option value="${esc(s.sap)} · ${esc(s.ten)}">`).join('');
 
     renderFields();
     refresh();
@@ -196,114 +159,41 @@ function renderFields(){
     wrap.dataset.showKey = f.showWhen ? Object.keys(f.showWhen)[0] : '';
     wrap.dataset.showVal = f.showWhen ? f.showWhen[Object.keys(f.showWhen)[0]] : '';
 
-    let inner = `<div class="st"><div class="name">${esc(f.label)}`;
-    if(f.required) inner += ` <span style="color:var(--red)">*</span>`;
-    inner += `</div>`;
-
+    let inner = `<div class="st"><div class="name">${esc(f.label)}</div>`;
     if(f.type === 'radio'){
       inner += `<div class="radios">` + f.options.map((o,i)=>
         `<label><input type="radio" name="${esc(f.key)}" value="${esc(o)}" ${i===0?'checked':''}><span>${esc(o)}</span></label>`
-      ).join('') + `</div></div>`;
+      ).join('') + `</div>`;
+      inner += `</div>`;
     } else if(f.type === 'select'){
-      inner += `<select id="${esc(f.key)}">` + f.options.map(o=>`<option>${esc(o)}</option>`).join('') + `</select></div>`;
+      inner += `<select id="${esc(f.key)}">` + f.options.map(o=>`<option>${esc(o)}</option>`).join('') + `</select>`;
+      inner += `</div>`;
     } else if(f.type === 'number'){
       inner += `<div class="num show"><input id="${esc(f.key)}" type="number" min="0" inputmode="numeric" placeholder="0"></div></div>`;
-    } else if(f.type === 'date'){
-      inner += `<input id="${esc(f.key)}" type="date"></div>`;
-    } else if(f.type === 'time'){
-      inner += `<input id="${esc(f.key)}" type="time"></div>`;
-    } else if(f.type === 'url'){
-      inner += `<input id="${esc(f.key)}" type="url" placeholder="https://..."></div>`;
-    } else if(f.type === 'rating'){
-      const mx = f.max || 5;
-      inner += `</div><input type="hidden" id="${esc(f.key)}" value="${mx}"><div class="stars" data-key="${esc(f.key)}" data-max="${mx}">` +
-        Array.from({length:mx},(_,i)=>`<span data-v="${i+1}">★</span>`).join('') + `</div>`;
-    } else if(f.type === 'checkbox'){
-      inner += `</div><div class="cboxes">` + f.options.map((o,i)=>
-        `<label><input type="checkbox" name="${esc(f.key)}" value="${esc(o)}"> ${esc(o)}</label>`
-      ).join('') + `</div>`;
-    } else if(f.type === 'image'){
-      inner += `</div><label class="uploadlabel" for="file_${esc(f.key)}">📷 Chụp/chọn ảnh${f.multiple?' (nhiều ảnh)':''}</label>` +
-        `<input type="file" id="file_${esc(f.key)}" accept="image/*" ${f.capture?'capture="environment"':''} ${f.multiple?'multiple':''} style="display:none">` +
-        `<div class="thumbs" id="thumbs_${esc(f.key)}"></div>`;
     } else if(f.type === 'textarea'){
       inner += `</div><textarea id="${esc(f.key)}" rows="3"></textarea>`;
-    } else { // text
+    } else {
       inner += `</div><input id="${esc(f.key)}" type="text">`;
     }
     wrap.innerHTML = inner;
     box.appendChild(wrap);
   });
 
+  // listeners
   document.querySelectorAll('input[name]').forEach(el => el.addEventListener('change', refresh));
-  document.querySelectorAll('#fields select, #fields input[type=date], #fields input[type=time]').forEach(el => el.addEventListener('change', refresh));
-  document.querySelectorAll('#fields input[type=number]').forEach(el => { el.addEventListener('input', refresh); el.addEventListener('change', refresh); });
-  document.querySelectorAll('#fields .stars').forEach(st => st.addEventListener('click', onStar));
-  document.querySelectorAll('#fields input[type=file]').forEach(inp => inp.addEventListener('change', onImage));
+  document.querySelectorAll('#fields select').forEach(el => el.addEventListener('change', refresh));
 
-  if(CFG.sum){ $('sumBox').style.display = 'flex'; $('sumLbl').textContent = CFG.sum.label || 'Tổng'; }
-  else $('sumBox').style.display = 'none';
-}
-
-function onStar(e){
-  const st = e.currentTarget;
-  const v = e.target.getAttribute && e.target.getAttribute('data-v');
-  if(!v) return;
-  $('#' + st.dataset.key).value = v;
-  st.querySelectorAll('span').forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= parseInt(v)));
-}
-
-function resizeImage(file){
-  return new Promise(res => {
-    const fr = new FileReader();
-    fr.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 1280;
-        let w = img.width, h = img.height;
-        if(w > MAX){ h = h * MAX / w; w = MAX; }
-        if(h > MAX){ w = w * MAX / h; h = MAX; }
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        res(c.toDataURL('image/jpeg', 0.72));
-      };
-      img.onerror = () => res(null);
-      img.src = fr.result;
-    };
-    fr.onerror = () => res(null);
-    fr.readAsDataURL(file);
-  });
-}
-
-async function onImage(e){
-  const key = e.target.id.replace('file_','');
-  const files = [...e.target.files];
-  for(const file of files){
-    const b64 = await resizeImage(file);
-    if(b64){ IMG[key] = IMG[key] || []; IMG[key].push(b64); }
-  }
-  e.target.value = '';
-  renderThumbs(key);
-}
-
-function renderThumbs(key){
-  const box = $('thumbs_' + key);
-  const arr = IMG[key] || [];
-  box.innerHTML = arr.map((b64,i)=>`<div class="thumb"><img src="${b64}"><span class="del" data-k="${esc(key)}" data-i="${i}">✕</span></div>`).join('');
-  box.querySelectorAll('.del').forEach(d => d.addEventListener('click', () => {
-    IMG[d.dataset.k].splice(parseInt(d.dataset.i), 1);
-    renderThumbs(d.dataset.k);
-  }));
+  if(CFG.sum){
+    $('sumBox').style.display = 'flex';
+    $('sumLbl').textContent = CFG.sum.label || 'Tổng';
+  } else $('sumBox').style.display = 'none';
 }
 
 function fieldVal(key){
-  const rc = document.querySelector(`input[type=radio][name="${key}"]:checked`);
-  if(rc) return rc.value;
-  const cbs = document.querySelectorAll(`input[type=checkbox][name="${key}"]:checked`);
-  if(cbs.length) return [...cbs].map(c=>c.value);
   const el = document.getElementById(key);
-  if(el) return el.value;
-  return '';
+  if(!el) return '';
+  if(el.type === 'radio'){ const c = document.querySelector(`input[name="${key}"]:checked`); return c?c.value:''; }
+  return el.value;
 }
 
 function numVal(key){ return parseInt(fieldVal(key)) || 0; }
@@ -347,85 +237,76 @@ function updateReady(){
     : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
 }
 
-function distinct(arr){ return [...new Set(arr)].sort((a,b)=>String(a).localeCompare(String(b),'vi')); }
-
-function buildMien(){
-  const miens = distinct(STORES.map(s=>s.mien).filter(Boolean));
-  $('selMien').innerHTML = '<option value="">— Miền —</option>' + miens.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
-  if(CFG.region && miens.includes(CFG.region)) $('selMien').value = CFG.region;
-  buildVung();
-}
-
-function buildVung(){
-  const m = $('selMien').value;
-  const gdvs = distinct(STORES.filter(s=>!m||s.mien===m).map(s=>s.gdv).filter(Boolean));
-  $('selVung').innerHTML = '<option value="">— Vùng (GĐV) —</option>' + gdvs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
-  buildQlkv();
-}
-
-function buildQlkv(){
-  const m = $('selMien').value, v = $('selVung').value;
-  const qs = distinct(STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)).map(s=>s.qlkv).filter(Boolean));
-  $('selQlkv').innerHTML = '<option value="">— QLKV —</option>' + qs.map(q=>`<option value="${esc(q)}">${esc(q)}</option>`).join('');
-  buildCh();
-}
-
-function buildCh(){
-  const m=$('selMien').value, v=$('selVung').value, q=$('selQlkv').value;
-  const chs = STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)&&(!q||s.qlkv===q));
-  $('selCh').innerHTML = '<option value="">— Cửa hàng —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
-  selectStore();
-}
-
-function selectStore(){
-  const sap = $('selCh').value;
-  const found = STORES.find(s=>s.sap===sap);
+async function matchStore(){
+  const v = $('storeSearch').value.trim();
+  const found = STORES.find(s => `${s.sap} · ${s.ten}` === v);
   if(found){
     selectedStore = found;
-    $('vLine1').textContent = found.sap + ' — ' + found.ten + ' — ' + (found.tinh||'') + ' — ' + (found.huyen||'');
-    $('vLine2').textContent = 'GĐV: ' + (found.gdv||'—') + ' — QLKV: ' + (found.qlkv||'—');
+    $('vTinh').textContent = found.tinh || '—';
+    $('vHuyen').textContent = found.huyen || '—';
+    $('vQlkv').textContent = found.qlkv || '—';
+    $('vGdv').textContent = found.gdv || '—';
+    $('storeSearch').style.borderColor = 'var(--green)';
+    const ml = $('mapLink');
+    if(found.lat && found.lng && parseFloat(found.lat) && parseFloat(found.lng)){
+      ml.href = 'https://www.google.com/maps/search/?api=1&query=' + found.lat + ',' + found.lng;
+      ml.style.display = 'inline-block';
+    } else ml.style.display = 'none';
+    loadUnsurveyed();
   } else {
     selectedStore = null;
-    $('vLine1').textContent = '—';
-    $('vLine2').textContent = '—';
+    $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
+    $('storeSearch').style.borderColor = 'var(--line)';
+    $('mapLink').style.display = 'none';
+    $('unsurveyedCard').style.display = 'none';
   }
   updateReady();
+}
+
+let doneSaps = [];
+async function loadUnsurveyed(){
+  if(!selectedStore || !selectedStore.qlkv) return;
+  try{
+    const r = await call({action:'getDoneSaps', id:SURVEY_ID});
+    doneSaps = r.ok ? (r.saps || []) : [];
+  }catch(e){ doneSaps = []; }
+  renderUnsurveyed();
+}
+
+function renderUnsurveyed(){
+  if(!selectedStore || !selectedStore.qlkv){ $('unsurveyedCard').style.display = 'none'; return; }
+  const qlkv = selectedStore.qlkv;
+  const qStores = STORES.filter(s => s.qlkv === qlkv);
+  const doneSet = new Set(doneSaps);
+  const undone = qStores.filter(s => !doneSet.has(s.sap));
+  $('unsurveyedQlkv').textContent = qlkv + ' · ' + undone.length + '/' + qStores.length + ' CH';
+  if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả CH đã được khảo sát!</div>'; }
+  else {
+    const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+    let html = '';
+    gdvs.forEach(g => {
+      const gStores = undone.filter(s=>s.gdv===g);
+      html += `<div style="font-weight:700;color:var(--navy);margin-top:8px">${esc(g)} · ${gStores.length} CH</div>`;
+      gStores.forEach(s => {
+        html += `<div style="padding-left:8px">${esc(s.sap)} · ${esc(s.ten)} · ${esc(s.tinh||'')}</div>`;
+      });
+    });
+    $('unsurveyedList').innerHTML = html;
+  }
+  $('unsurveyedCard').style.display = 'block';
 }
 
 function collectValues(){
   const values = {};
   CFG.fields.forEach(f => {
-    if(f.type === 'image'){ values[f.key] = IMG[f.key] || []; return; }
     const v = fieldVal(f.key);
-    if(f.type === 'number' || f.type === 'rating'){ values[f.key] = parseInt(v) || 0; }
-    else values[f.key] = v;
+    values[f.key] = f.type === 'number' ? numVal(f.key) : v;
   });
   return values;
 }
 
-function confirmSubmit(){
-  if(!selectedStore || !CFG) return;
-  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
-  const values = collectValues();
-  let html = '<div class="row"><span class="l">Cửa hàng</span><span class="r">' + esc(selectedStore.sap) + ' · ' + esc(selectedStore.ten) + '</span></div>';
-  html += '<div class="row"><span class="l">GĐV - QLKV</span><span class="r">' + esc(selectedStore.gdv||'') + ' — ' + esc(selectedStore.qlkv||'') + '</span></div>';
-  CFG.fields.forEach(f => {
-    let v = values[f.key];
-    if(f.type==='image') v = (v||[]).length + ' ảnh';
-    else if(f.type==='checkbox') v = Array.isArray(v) ? v.join(', ') : '';
-    html += '<div class="row"><span class="l">' + esc(f.label) + '</span><span class="r">' + esc(v) + '</span></div>';
-  });
-  if(CFG.sum){
-    const t = totalSum();
-    html += '<div class="row"><span class="l">' + esc(CFG.sum.label||'Tổng') + '</span><span class="r" style="color:'+(t>=CFG.sum.warn?'var(--red)':'inherit')+'">' + t + '</span></div>';
-  }
-  $('confirmBody').innerHTML = html;
-  $('confirmOverlay').style.display = 'flex';
-}
-
-async function doSubmit(){
+async function submit(){
   if(!selectedStore) return;
-  $('confirmOverlay').style.display = 'none';
   const d = { store: {
     sap:selectedStore.sap, ten:selectedStore.ten, tinh:selectedStore.tinh,
     huyen:selectedStore.huyen, qlkv:selectedStore.qlkv, gdv:selectedStore.gdv
@@ -433,15 +314,8 @@ async function doSubmit(){
   $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Đang gửi...';
   try{
     const res = await call({action:'submit', id:SURVEY_ID, store:d.store, values:d.values});
-    if(res.ok){
-      $('btnSubmit').style.display = 'none';
-      $('successBox').style.display = 'block';
-      $('successDetail').textContent = selectedStore.sap + ' · ' + selectedStore.ten + ' — ' + (selectedStore.gdv||'');
-      showToast('✅ Đã gửi thành công!');
-    } else {
-      showToast('⚠️ ' + (res.error||'Lỗi'), true);
-      $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
-    }
+    if(res.ok){ showToast(res.warn ? '✅ Đã gửi! ' + res.warn : '✅ Đã gửi thành công!'); if(selectedStore){ doneSaps.push(selectedStore.sap); } resetForm(); }
+    else { showToast('⚠️ ' + (res.error||'Lỗi'), true); $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả'; }
   }catch(e){
     showToast('⚠️ Không kết nối được máy chủ', true);
     $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
@@ -449,12 +323,13 @@ async function doSubmit(){
 }
 
 function resetForm(){
-  selectedStore = null; IMG = {};
-  $('vLine1').textContent = '—'; $('vLine2').textContent = '—';
-  $('successBox').style.display = 'none'; $('btnSubmit').style.display = 'block';
-  $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Gửi kết quả';
-  renderFields();
-  buildMien();
+  selectedStore = null;
+  $('storeSearch').value = '';
+  $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
+  $('mapLink').style.display = 'none';
+  $('unsurveyedCard').style.display = 'none';
+  document.querySelectorAll('#fields input[type=number]').forEach(i=>i.value='');
+  document.querySelectorAll('#fields input[type=radio]').forEach(r=>{ if(r.value==='Bình thường'||r.value==='Hoạt động') r.checked=true; });
   refresh();
 }
 
@@ -465,12 +340,10 @@ function showToast(msg, isErr){
   t.classList.add('show'); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
-$('selMien').addEventListener('change', buildVung);
-$('selVung').addEventListener('change', buildQlkv);
-$('selQlkv').addEventListener('change', buildCh);
-$('selCh').addEventListener('change', selectStore);
-$('btnSubmit').addEventListener('click', confirmSubmit);
-$('foot').innerHTML = '<a href="dashboard.html?s=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát · <span style="color:var(--mut)">v26.10.5</span>';
+$('storeSearch').addEventListener('input', matchStore);
+$('storeSearch').addEventListener('change', matchStore);
+$('btnSubmit').addEventListener('click', submit);
+$('foot').innerHTML = '<a href="dashboard.html?survey=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
 
 init();
 </script>
