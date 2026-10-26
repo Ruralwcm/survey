@@ -44,7 +44,16 @@
   .empty{text-align:center; color:var(--mut); padding:24px 0; font-size:13.5px}
   .logout{float:right; font-size:12px; color:rgba(255,255,255,.85); text-decoration:none;
     background:rgba(255,255,255,.14); padding:6px 12px; border-radius:16px; cursor:pointer}
-  .foot{text-align:center; color:var(--mut); font-size:11.5px; margin-top:20px}
+  .foot{text-align:center; color:var(--mut); font-size:11px; margin-top:16px}
+  .grow{cursor:pointer; user-select:none}
+  .grow .ar{display:inline-block; width:14px; font-size:11px; transition:.2s}
+  .grow .ar.open{transform:rotate(90deg)}
+  .gdv-row{display:flex; align-items:center; padding:8px 0; border-bottom:1px solid var(--line)}
+  .gdv-row .name{font-weight:700; font-size:13px; min-width:140px}
+  .gdv-row .bar-wrap{flex:1;height:8px;background:#e9edf5;border-radius:6px;overflow:hidden;margin:0 10px}
+  .gdv-row .bar-wrap i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:6px}
+  .gdv-row .stat{font-size:12px;white-space:nowrap;color:var(--mut);min-width:70px;text-align:right}
+  .qlkv-sub{margin-left:20px;padding:4px 0;border-bottom:1px solid #f0f2f6}
 </style>
 </head>
 <body>
@@ -74,6 +83,10 @@
       <div class="bar"><i id="barFill" style="width:0%"></i></div>
     </div>
     <div class="card">
+      <h2>📋 Theo GĐV</h2>
+      <div id="gdvSection">Đang tải...</div>
+    </div>
+    <div class="card">
       <h2>🎯 Chọn địa bàn / CH</h2>
       <div class="cas">
         <div><label>Miền</label><select id="selMien"><option value="">— Miền —</option></select></div>
@@ -87,16 +100,10 @@
     </div>
     <div class="card">
       <h2>🎯 Khai báo CH khảo sát</h2>
-      <div class="cas">
-        <div><label>Vùng (GĐV)</label><select id="tVung"><option value="">— Chọn —</option></select></div>
-        <div><label>QLKV</label><select id="tQlkv"><option value="">— Chọn —</option></select></div>
-        <div><label>Cửa hàng</label><select id="tCh"><option value="">— Chọn —</option></select></div>
-      </div>
-      <button class="btn btn-sm" onclick="addTargetCH()" style="margin-top:6px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">➕ Thêm CH vào danh sách</button>
-      <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
-        <label style="font-size:11.5px;font-weight:600;color:var(--mut)">Hoặc dán mã SAP (cách bởi dấu phẩy hoặc xuống dòng)</label>
-        <textarea id="tPaste" rows="3" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
-        <button class="btn btn-sm" onclick="pasteTargets()" style="margin-top:4px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">📋 Thêm vào danh sách</button>
+      <div style="margin-top:4px">
+        <label style="font-size:11.5px;font-weight:600;color:var(--mut);margin-bottom:6px">Dán mã SAP (cách bởi dấu phẩy hoặc xuống dòng)</label>
+        <textarea id="tPaste" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
+        <button class="btn btn-sm" onclick="pasteTargets()" style="margin-top:6px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">📋 Thêm vào danh sách</button>
       </div>
       <div id="tList" style="margin-top:12px">
         <div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>
@@ -108,7 +115,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.1</span></div>
   </div>
 </div>
 
@@ -173,33 +180,7 @@ function buildCh(){
 async function loadTargets(){
   try{ const r = await call({action:'getTargets',id:SID});
     if(r.ok){ TARGET.saps = r.saps || []; TARGET.loaded = true; } }catch(e){}
-  renderTargetList(); buildTVung();
-}
-
-function buildTVung(){
-  const m = $('selMien').value;
-  const gs = distinct(STORES.filter(s=>!m||s.mien===m).map(s=>s.gdv).filter(Boolean));
-  $('tVung').innerHTML = '<option value="">— Chọn —</option>' + gs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
-  buildTQlkv();
-}
-function buildTQlkv(){
-  const m=$('selMien').value, v=$('tVung').value;
-  const qs=distinct(STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)).map(s=>s.qlkv).filter(Boolean));
-  $('tQlkv').innerHTML = '<option value="">— Chọn —</option>' + qs.map(q=>`<option value="${esc(q)}">${esc(q)}</option>`).join('');
-  buildTCh();
-}
-function buildTCh(){
-  const m=$('selMien').value, v=$('tVung').value, q=$('tQlkv').value;
-  const chs = STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)&&(!q||s.qlkv===q));
-  $('tCh').innerHTML = '<option value="">— Chọn —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
-}
-
-function addTargetCH(){
-  const sap = $('tCh').value; if(!sap) return;
-  if(TARGET.saps.includes(sap)){ $('tErr').textContent='CH đã có trong danh sách'; $('tErr').style.display='block'; return; }
-  $('tErr').style.display='none';
-  TARGET.saps.push(sap);
-  $('tCh').value = ''; renderTargetList();
+  renderTargetList();
 }
 function pasteTargets(){
   const raw = $('tPaste').value; if(!raw.trim()) return;
@@ -261,7 +242,62 @@ function render(){
   $('kPct').textContent = pct + '%';
   $('kAlert').textContent = alert;
   $('barFill').style.width = Math.min(100,pct) + '%';
+  buildGdvSection();
   renderTable();
+}
+
+function buildGdvSection(){
+  const set = scopeSaps();
+  const rows = scopedRows();
+  const doneSet = new Set(rows.map(r=>r.sap));
+  const sInScope = STORES.filter(s=>set.has(s.sap));
+  const gdvs = [...new Set(sInScope.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+  let html = '';
+  gdvs.forEach(gdv => {
+    const sGdv = sInScope.filter(s=>s.gdv===gdv);
+    const totalG = sGdv.length;
+    const doneG = sGdv.filter(s=>doneSet.has(s.sap)).length;
+    const pctG = totalG ? Math.round(doneG/totalG*100) : 0;
+    html += `<div class="grow" onclick="toggleGdv(this)" data-gdv="${esc(gdv)}">` +
+      `<span class="ar">▶</span> <span class="name">${esc(gdv)}</span>` +
+      `<div class="bar-wrap"><i style="width:${pctG}%"></i></div>` +
+      `<span class="stat">${doneG}/${totalG} (${pctG}%)</span></div>` +
+      `<div class="qlkv-subs" id="sub_${esc(gdv).replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none"></div>`;
+  });
+  if(!gdvs.length) html = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>';
+  $('gdvSection').innerHTML = html;
+}
+function toggleGdv(el){
+  const gdv = el.dataset.gdv;
+  const sub = document.getElementById('sub_' + gdv.replace(/[^a-zA-Z0-9]/g,'_'));
+  const ar = el.querySelector('.ar');
+  if(!sub) return;
+  if(sub.style.display === 'none'){
+    ar.classList.add('open');
+    sub.style.display = 'block';
+    if(!sub.dataset.loaded){ fillQlkv(gdv, sub); sub.dataset.loaded='1'; }
+  } else {
+    ar.classList.remove('open');
+    sub.style.display = 'none';
+  }
+}
+function fillQlkv(gdv, sub){
+  const set = scopeSaps();
+  const rows = scopedRows();
+  const doneSet = new Set(rows.map(r=>r.sap));
+  const sGdv = STORES.filter(s=>set.has(s.sap)&&s.gdv===gdv);
+  const qlkvs = [...new Set(sGdv.map(s=>s.qlkv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+  let html = '';
+  qlkvs.forEach(q => {
+    const sQ = sGdv.filter(s=>s.qlkv===q);
+    const t = sQ.length, d = sQ.filter(s=>doneSet.has(s.sap)).length;
+    const p = t?Math.round(d/t*100):0;
+    html += `<div class="qlkv-sub" style="display:flex;align-items:center;font-size:12px">
+      <span style="min-width:120px">${esc(q)}</span>
+      <div class="bar-wrap" style="height:6px"><i style="width:${p}%"></i></div>
+      <span class="stat">${d}/${t} (${p}%)</span></div>`;
+  });
+  sub.innerHTML = html || '<div style="font-size:12px;color:var(--mut);padding:4px 0">—</div>';
 }
 
 function renderTable(){
@@ -313,12 +349,10 @@ function renderTable(){
 function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null; TARGET={saps:[],loaded:false};
   $('dash').style.display='none'; $('loginBox').style.display='block'; $('pwd').value=''; }
 
-$('selMien').addEventListener('change', ()=>{ buildVung(); buildTVung(); render(); });
+$('selMien').addEventListener('change', ()=>{ buildVung(); render(); });
 $('selVung').addEventListener('change', ()=>{ buildQlkv(); render(); });
 $('selQlkv').addEventListener('change', ()=>{ buildCh(); render(); });
 $('selCh').addEventListener('change', render);
-$('tVung').addEventListener('change', buildTQlkv);
-$('tQlkv').addEventListener('change', buildTCh);
 
 (async function init(){
   if(TOKEN){
