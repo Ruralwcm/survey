@@ -44,6 +44,10 @@
   .empty{text-align:center; color:var(--mut); padding:24px 0; font-size:13.5px}
   .logout{float:right; font-size:12px; color:rgba(255,255,255,.85); text-decoration:none;
     background:rgba(255,255,255,.14); padding:6px 12px; border-radius:16px; cursor:pointer}
+  .hdr-acts{float:right; display:flex; gap:6px}
+  .hdr-btn{background:rgba(255,255,255,.16); color:#fff; border:none; border-radius:16px;
+    padding:5px 11px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap}
+  .hdr-btn:hover{background:rgba(255,255,255,.26)}
   .foot{text-align:center; color:var(--mut); font-size:11px; margin-top:16px}
   .grow{cursor:pointer; user-select:none}
   .grow .ar{display:inline-block; width:14px; font-size:11px; transition:.2s}
@@ -54,6 +58,12 @@
   .gdv-row .bar-wrap i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:6px}
   .gdv-row .stat{font-size:12px;white-space:nowrap;color:var(--mut);min-width:70px;text-align:right}
   .qlkv-sub{margin-left:20px;padding:4px 0;border-bottom:1px solid #f0f2f6}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
+    z-index:999; padding:14px}
+  .modal{background:#fff;border-radius:14px;padding:18px;max-width:420px;width:100%;box-shadow:0 16px 40px rgba(0,0,0,.2)}
+  .modal h3{font-size:15px;font-weight:800;margin-bottom:12px;color:var(--navy)}
+  .btn2{flex:1;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn2.ghost{background:#f0f2f7;color:var(--txt)}
 </style>
 </head>
 <body>
@@ -68,7 +78,11 @@
 
   <div id="dash" style="display:none">
     <div class="head">
-      <a class="logout" onclick="logout()">Đăng xuất</a>
+      <div class="hdr-acts">
+        <button class="hdr-btn" onclick="refreshData()" title="Đồng bộ dữ liệu mới nhất">🔄</button>
+        <button class="hdr-btn" onclick="showImport()" title="Khai báo CH khảo sát">📥 Import</button>
+        <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
+      </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
       <p>cập nhật: <span id="updated"></span></p>
     </div>
@@ -115,7 +129,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.1</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.2</span></div>
   </div>
 </div>
 
@@ -346,6 +360,35 @@ function renderTable(){
   $('tableWrap').innerHTML = html;
 }
 
+async function refreshData(){
+  try{ const res = await call({action:'getResults',id:SID,token:TOKEN});
+    if(res.ok){ ROWS = res.rows || []; CFG = res.config; $('updated').textContent = new Date().toLocaleString('vi-VN'); render(); }
+    else showErr('Lỗi đồng bộ'); }catch(e){ showErr('Không kết nối được'); }
+}
+function showErr(msg){ $('tErr').textContent = msg; $('tErr').style.display = 'block'; $('tErr').style.color = 'var(--red)'; }
+function showImport(){ $('importOverlay').style.display = 'flex'; $('importSaps').value = ''; }
+async function importAllSites(){
+  const saps = [...scopeSaps()];
+  TARGET.saps = saps;
+  $('importOverlay').style.display = 'none';
+  try{
+    const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
+    if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
+    else showErr(r.error||'Lỗi');
+  }catch(e){ showErr('Lỗi kết nối'); }
+}
+async function importPasted(){
+  const raw = $('importSaps').value; if(!raw.trim()) return;
+  const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
+  TARGET.saps = saps;
+  $('importOverlay').style.display = 'none';
+  try{
+    const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
+    if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
+    else showErr(r.error||'Lỗi');
+  }catch(e){ showErr('Lỗi kết nối'); }
+}
+
 function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null; TARGET={saps:[],loaded:false};
   $('dash').style.display='none'; $('loginBox').style.display='block'; $('pwd').value=''; }
 
@@ -363,5 +406,17 @@ $('selCh').addEventListener('change', render);
   if(SID){ try{ const s = await call({action:'getSurvey', id:SID}); if(s.ok) $('loginSub').textContent = s.config.title; }catch(e){} }
 })();
 </script>
+<div class="overlay" id="importOverlay" style="display:none">
+    <div class="modal">
+      <h3>📥 Khai báo CH khảo sát</h3>
+      <button class="btn" style="margin-bottom:10px;background:var(--navy)" onclick="importAllSites()">📋 Import tất cả CH (mặc định)</button>
+      <div style="border-top:1px solid var(--line);padding-top:10px;margin-bottom:6px">
+        <label style="font-size:11.5px;font-weight:600;color:var(--mut);margin-bottom:6px">Hoặc dán mã SAP cụ thể</label>
+        <textarea id="importSaps" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
+        <button class="btn" style="margin-top:6px;background:var(--navy)" onclick="importPasted()">📋 Import danh sách trên</button>
+      </div>
+      <button class="btn2 ghost" style="margin-top:8px" onclick="$('importOverlay').style.display='none'">Đóng</button>
+    </div>
+  </div>
 </body>
 </html>
