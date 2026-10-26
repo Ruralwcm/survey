@@ -131,7 +131,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.6</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.7</span></div>
   </div>
 </div>
 
@@ -205,7 +205,8 @@ async function loadTargets(){
   renderTargetList();
 }
 function pasteTargets(){
-  const raw = $('tPaste').value; if(!raw.trim()) return;
+  const tp = $('tPaste'); if(!tp) return;
+  const raw = tp.value; if(!raw.trim()) return;
   const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
   let added = 0;
   saps.forEach(sap => { if(!TARGET.saps.includes(sap)){ TARGET.saps.push(sap); added++; } });
@@ -213,6 +214,7 @@ function pasteTargets(){
 }
 function renderTargetList(){
   const box = $('tList');
+  if(!box) return;
   if(!TARGET.saps.length){
     box.innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>';
     return;
@@ -389,11 +391,11 @@ async function refreshData(){
     else showErr('Lỗi đồng bộ'); }catch(e){ showErr('Không kết nối được'); }
 }
 function showErr(msg){ $('tErr').textContent = msg; $('tErr').style.display = 'block'; $('tErr').style.color = 'var(--red)'; }
-function showImport(){ $('importOverlay').style.display = 'flex'; $('importSaps').value = ''; }
+function showImport(){ const ov = $('importOverlay'); if(!ov) return; ov.style.display = 'flex'; $('importSaps').value = ''; }
 async function importAllSites(){
   const saps = [...scopeSaps()];
   TARGET.saps = saps;
-  $('importOverlay').style.display = 'none';
+  const ov = $('importOverlay'); if(ov) ov.style.display = 'none';
   try{
     const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
     if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
@@ -401,10 +403,11 @@ async function importAllSites(){
   }catch(e){ showErr('Lỗi kết nối'); }
 }
 async function importPasted(){
-  const raw = $('importSaps').value; if(!raw.trim()) return;
+  const imp = $('importSaps'); if(!imp) return;
+  const raw = imp.value; if(!raw.trim()) return;
   const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
   TARGET.saps = saps;
-  $('importOverlay').style.display = 'none';
+  const ov = $('importOverlay'); if(ov) ov.style.display = 'none';
   try{
     const r = await call({action:'setTargets',id:SID,saps:TARGET.saps});
     if(r.ok){ renderTargetList(); render(); $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent='✅ Đã import '+r.count+' CH'; }
