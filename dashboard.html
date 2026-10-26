@@ -100,7 +100,7 @@
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.24</b></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.25</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -137,7 +137,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.24</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.25</span></div>
   </div>
 </div>
 
@@ -190,11 +190,14 @@ async function enterando(){
   $('loginBox').style.display = 'none'; $('dash').style.display = 'block';
   $('dTitle').textContent = CFG ? CFG.title : SID;
   $('updated').textContent = new Date().toLocaleString('vi-VN');
+  // xóa cache stores cũ — luôn load mới
+  try { sessionStorage.removeItem('sv_stores_' + SID); } catch(e) {}
   let ok = false;
   try { ok = await loadStores(); }
-  catch(e){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--red)">Lỗi tải CH: ' + esc(e && e.message || e) + '</div>'; }
+  catch(e){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--red)">Lỗi tải CH: ' + esc((e && e.message) || e) + '</div>'; }
   buildMien();
-  if(ok) render(); else { $('tableWrap').innerHTML = '<div class="empty">Chưa tải được danh sách CH — bấm ⚡ để thử lại</div>'; }
+  if(ok){ try{ $('storeStatus').textContent = '✅ ' + STORES.length + ' CH'; render(); }catch(e){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--red)">Lỗi render: ' + esc((e && e.message) || e) + '</div>'; $('tableWrap').innerHTML = '<div class="empty" style="color:var(--red)">Lỗi JS — F12 mở Console</div>'; } }
+  else { $('storeStatus').textContent = '❌ Lỗi tải CH'; $('tableWrap').innerHTML = '<div class="empty" style="color:var(--red)">Chưa tải được danh sách CH — bấm ⚡ để thử lại</div>'; }
   loadTargets().catch(()=>{});
 }
 
