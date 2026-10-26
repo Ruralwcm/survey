@@ -58,6 +58,15 @@
   .gdv-row .bar-wrap i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:6px}
   .gdv-row .stat{font-size:12px;white-space:nowrap;color:var(--mut);min-width:70px;text-align:right}
   .qlkv-sub{margin-left:20px;padding:4px 0;border-bottom:1px solid #f0f2f6}
+  .gdv-table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
+  .gdv-table th{background:#f6f8fc;color:var(--mut);font-size:11px;font-weight:700;padding:8px 10px;text-align:right;border-bottom:2px solid var(--line)}
+  .gdv-table th.left{text-align:left}
+  .gdv-table td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  .gdv-table td.left{text-align:left;font-weight:600}
+  .gdv-table .bar-cell{min-width:80px}
+  .gdv-table .bar-cell i{display:block;height:7px;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:5px}
+  .gdv-table .qlkv-name{padding-left:24px;font-weight:500;font-size:12px}
+  .gdv-sub{display:none}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
     z-index:999; padding:14px}
   .modal{background:#fff;border-radius:14px;padding:18px;max-width:420px;width:100%;box-shadow:0 16px 40px rgba(0,0,0,.2)}
@@ -112,24 +121,12 @@
         <input id="fSearch" placeholder="Tìm mã SAP / tên CH..." oninput="renderTable()">
       </div>
     </div>
-    <div class="card">
-      <h2>🎯 Khai báo CH khảo sát</h2>
-      <div style="margin-top:4px">
-        <label style="font-size:11.5px;font-weight:600;color:var(--mut);margin-bottom:6px">Dán mã SAP (cách bởi dấu phẩy hoặc xuống dòng)</label>
-        <textarea id="tPaste" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
-        <button class="btn btn-sm" onclick="pasteTargets()" style="margin-top:6px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">📋 Thêm vào danh sách</button>
-      </div>
-      <div id="tList" style="margin-top:12px">
-        <div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>
-      </div>
-      <button class="btn" id="tSaveBtn" onclick="saveTargets()" style="margin-top:10px;background:var(--navy)">💾 Lưu danh sách CH khảo sát</button>
-      <div class="err" id="tErr"></div>
-    </div>
+    <div class="err" id="tErr"></div>
     <div class="card">
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.2</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.3</span></div>
   </div>
 </div>
 
@@ -266,52 +263,67 @@ function buildGdvSection(){
   const doneSet = new Set(rows.map(r=>r.sap));
   const sInScope = STORES.filter(s=>set.has(s.sap));
   const gdvs = [...new Set(sInScope.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
-  let html = '';
+  if(!gdvs.length){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>'; return; }
+
+  const sumLabel = (CFG.sum||{}).label||'Tổng';
+  const warnLabel = (CFG.sum||{}).warnLabel||'CH có vấn đề';
+  let html = `<table class="gdv-table"><thead><tr>
+    <th class="left">GĐV</th><th>CH KS</th><th>Đã làm</th><th class="bar-cell">Tỷ lệ</th><th>%</th>
+    <th>${esc(warnLabel)}</th><th>${esc(sumLabel)}</th></tr></thead><tbody>`;
+
   gdvs.forEach(gdv => {
     const sGdv = sInScope.filter(s=>s.gdv===gdv);
-    const totalG = sGdv.length;
-    const doneG = sGdv.filter(s=>doneSet.has(s.sap)).length;
-    const pctG = totalG ? Math.round(doneG/totalG*100) : 0;
-    html += `<div class="grow" onclick="toggleGdv(this)" data-gdv="${esc(gdv)}">` +
-      `<span class="ar">▶</span> <span class="name">${esc(gdv)}</span>` +
-      `<div class="bar-wrap"><i style="width:${pctG}%"></i></div>` +
-      `<span class="stat">${doneG}/${totalG} (${pctG}%)</span></div>` +
-      `<div class="qlkv-subs" id="sub_${esc(gdv).replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none"></div>`;
+    const t = sGdv.length;
+    const d = sGdv.filter(s=>doneSet.has(s.sap)).length;
+    const pct = t ? Math.round(d/t*100) : 0;
+    const rGdv = rows.filter(r=>sGdv.some(s=>s.sap===r.sap));
+    const warn = rGdv.filter(isWarn).length;
+    const sumTot = rGdv.reduce((a,r)=>a+(r.total||0),0);
+    const subId = 'sub_' + gdv.replace(/[^a-zA-Z0-9]/g,'_');
+    html += `<tr class="grow" onclick="toggleGdv('${esc(gdv)}','${subId}')" style="cursor:pointer">
+      <td class="left">▶ ${esc(gdv)}</td><td>${t}</td><td>${d}</td>
+      <td class="bar-cell"><i style="width:${pct}%"></i></td><td>${pct}%</td>
+      <td style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td>${sumTot||'—'}</td></tr>`;
+    html += `<tr class="gdv-sub" id="${subId}"><td colspan="7" style="padding:0"><div id="${subId}_inner"></div></td></tr>`;
   });
-  if(!gdvs.length) html = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>';
+  html += '</tbody></table>';
   $('gdvSection').innerHTML = html;
 }
-function toggleGdv(el){
-  const gdv = el.dataset.gdv;
-  const sub = document.getElementById('sub_' + gdv.replace(/[^a-zA-Z0-9]/g,'_'));
-  const ar = el.querySelector('.ar');
+
+let gdvExpanded = {};
+function toggleGdv(gdv, subId){
+  const sub = document.getElementById(subId);
   if(!sub) return;
-  if(sub.style.display === 'none'){
-    ar.classList.add('open');
-    sub.style.display = 'block';
-    if(!sub.dataset.loaded){ fillQlkv(gdv, sub); sub.dataset.loaded='1'; }
+  if(sub.style.display === 'none' || sub.style.display === ''){
+    sub.style.display = 'table-row';
+    if(!gdvExpanded[gdv]){ fillQlkvTable(gdv, subId + '_inner'); gdvExpanded[gdv] = true; }
   } else {
-    ar.classList.remove('open');
     sub.style.display = 'none';
   }
 }
-function fillQlkv(gdv, sub){
+
+function fillQlkvTable(gdv, targetId){
   const set = scopeSaps();
   const rows = scopedRows();
   const doneSet = new Set(rows.map(r=>r.sap));
   const sGdv = STORES.filter(s=>set.has(s.sap)&&s.gdv===gdv);
   const qlkvs = [...new Set(sGdv.map(s=>s.qlkv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
-  let html = '';
+  let html = '<table class="gdv-table" style="margin:0"><tbody>';
   qlkvs.forEach(q => {
     const sQ = sGdv.filter(s=>s.qlkv===q);
-    const t = sQ.length, d = sQ.filter(s=>doneSet.has(s.sap)).length;
-    const p = t?Math.round(d/t*100):0;
-    html += `<div class="qlkv-sub" style="display:flex;align-items:center;font-size:12px">
-      <span style="min-width:120px">${esc(q)}</span>
-      <div class="bar-wrap" style="height:6px"><i style="width:${p}%"></i></div>
-      <span class="stat">${d}/${t} (${p}%)</span></div>`;
+    const t = sQ.length;
+    const d = sQ.filter(s=>doneSet.has(s.sap)).length;
+    const pct = t?Math.round(d/t*100):0;
+    const rQ = rows.filter(r=>sQ.some(s=>s.sap===r.sap));
+    const warn = rQ.filter(isWarn).length;
+    const sumTot = rQ.reduce((a,r)=>a+(r.total||0),0);
+    html += `<tr>
+      <td class="left qlkv-name">${esc(q)}</td><td>${t}</td><td>${d}</td>
+      <td class="bar-cell"><i style="width:${pct}%"></i></td><td>${pct}%</td>
+      <td style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td>${sumTot||'—'}</td></tr>`;
   });
-  sub.innerHTML = html || '<div style="font-size:12px;color:var(--mut);padding:4px 0">—</div>';
+  html += '</tbody></table>';
+  document.getElementById(targetId).innerHTML = html || '<div style="font-size:12px;color:var(--mut);padding:8px">—</div>';
 }
 
 function renderTable(){
