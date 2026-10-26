@@ -132,7 +132,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.8</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.9</span></div>
   </div>
 </div>
 
@@ -286,6 +286,7 @@ function buildGdvSection(){
     <th class="col-warn">${esc(warnLabel)}</th><th class="col-sum">${esc(sumLabel)}</th></tr></thead><tbody>`;
 
   gdvs.forEach(gdv => {
+    const cls = 'sub-' + gdv.replace(/[^a-zA-Z0-9]/g,'_');
     const sGdv = sInScope.filter(s=>s.gdv===gdv);
     const t = sGdv.length;
     const d = sGdv.filter(s=>doneSet.has(s.sap)).length;
@@ -293,51 +294,42 @@ function buildGdvSection(){
     const rGdv = rows.filter(r=>sGdv.some(s=>s.sap===r.sap));
     const warn = rGdv.filter(isWarn).length;
     const sumTot = rGdv.reduce((a,r)=>a+(r.total||0),0);
-    const subId = 'sub_' + gdv.replace(/[^a-zA-Z0-9]/g,'_');
-    html += `<tr class="grow" onclick="toggleGdv('${esc(gdv)}','${subId}')" style="cursor:pointer">
-      <td class="left col-gdv">▶ ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
+    html += `<tr class="grow" onclick="toggleGdv(this,'${cls}')" style="cursor:pointer">
+      <td class="left col-gdv"><span class="ar">▶</span> ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
       <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
       <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
-    html += `<tr class="gdv-sub" id="${subId}"><td colspan="7" style="padding:0"><div id="${subId}_inner"></div></td></tr>`;
+    // QLKV rows — same table, same column widths
+    const qlkvs = [...new Set(sGdv.map(s=>s.qlkv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+    qlkvs.forEach(q => {
+      const sQ = sGdv.filter(s=>s.qlkv===q);
+      const qt = sQ.length;
+      const qd = sQ.filter(s=>doneSet.has(s.sap)).length;
+      const qpct = qt?Math.round(qd/qt*100):0;
+      const rQ = rows.filter(r=>sQ.some(s=>s.sap===r.sap));
+      const qwarn = rQ.filter(isWarn).length;
+      const qsum = rQ.reduce((a,r)=>a+(r.total||0),0);
+      html += `<tr class="gdv-sub ${cls}" style="display:none">
+        <td class="left col-gdv qlkv-name">${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
+        <td class="bar-cell col-bar"><i style="width:${qpct}%"></i></td><td class="col-pct">${qpct}%</td>
+        <td class="col-warn" style="color:${qwarn?'var(--red)':'inherit'}">${qwarn||'—'}</td><td class="col-sum">${qsum||'—'}</td></tr>`;
+    });
   });
   html += '</tbody></table>';
   $('gdvSection').innerHTML = html;
 }
 
-let gdvExpanded = {};
-function toggleGdv(gdv, subId){
-  const sub = document.getElementById(subId);
-  if(!sub) return;
-  if(sub.style.display === 'none' || sub.style.display === ''){
-    sub.style.display = 'table-row';
-    if(!gdvExpanded[gdv]){ fillQlkvTable(gdv, subId + '_inner'); gdvExpanded[gdv] = true; }
+let gdvOpen = {};
+function toggleGdv(row, cls){
+  const rows = document.querySelectorAll('.' + cls);
+  const ar = row.querySelector('.ar');
+  if(gdvOpen[cls]){
+    rows.forEach(r => r.style.display = 'none');
+    if(ar) ar.classList.remove('open');
   } else {
-    sub.style.display = 'none';
+    rows.forEach(r => r.style.display = 'table-row');
+    if(ar) ar.classList.add('open');
   }
-}
-
-function fillQlkvTable(gdv, targetId){
-  const set = scopeSaps();
-  const rows = scopedRows();
-  const doneSet = new Set(rows.map(r=>r.sap));
-  const sGdv = STORES.filter(s=>set.has(s.sap)&&s.gdv===gdv);
-  const qlkvs = [...new Set(sGdv.map(s=>s.qlkv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
-  let html = '<table class="gdv-table" style="margin:0"><tbody>';
-  qlkvs.forEach(q => {
-    const sQ = sGdv.filter(s=>s.qlkv===q);
-    const t = sQ.length;
-    const d = sQ.filter(s=>doneSet.has(s.sap)).length;
-    const pct = t?Math.round(d/t*100):0;
-    const rQ = rows.filter(r=>sQ.some(s=>s.sap===r.sap));
-    const warn = rQ.filter(isWarn).length;
-    const sumTot = rQ.reduce((a,r)=>a+(r.total||0),0);
-    html += `<tr>
-      <td class="left qlkv-name col-gdv">${esc(q)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
-      <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
-      <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById(targetId).innerHTML = html || '<div style="font-size:12px;color:var(--mut);padding:8px">—</div>';
+  gdvOpen[cls] = !gdvOpen[cls];
 }
 
 function renderTable(){
