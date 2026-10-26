@@ -137,7 +137,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.20</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.22</span></div>
   </div>
 </div>
 
@@ -150,9 +150,13 @@ const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const distinct = a => [...new Set(a)].sort((x,y)=>String(x).localeCompare(String(y),'vi'));
 
-async function call(data){
-  const r = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) });
-  return r.json();
+async function call(data, timeoutMs){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), timeoutMs || 30000);
+  try{
+    const r = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data), signal: ctrl.signal });
+    return r.json();
+  } finally { clearTimeout(t); }
 }
 
 function togglePwd(){
@@ -173,28 +177,23 @@ async function login(){
 }
 
 async function loadStores(){
-  // 1. Try localStorage cache first
   const key = 'sv_stores_' + SID;
   const cached = sessionStorage.getItem(key);
-  if(cached){ try{ const d=JSON.parse(cached); if(d.region===CFG.region && d.stores.length){ STORES=d.stores; return; } }catch(e){} }
-  // 2. Fetch all stores (no region filter = faster)
-  const s = await call({action:'getStores', region:''});
-  if(s && s.ok && s.stores){
-    // 3. Filter by region on client side
-    const reg = (CFG.region||'').trim().toLowerCase();
-    STORES = reg ? s.stores.filter(x=>(x.mien||'').trim().toLowerCase()===reg) : s.stores;
-    // 4. Cache for next time
-    try{ sessionStorage.setItem(key, JSON.stringify({region:CFG.region,stores:STORES})); }catch(e){}
-  }
+  if(cached){ try{ const d=JSON.parse(cached); if(d.region===CFG.region && d.stores.length){ STORES=d.stores; return true; } }catch(e){} }
+  const s = await call({action:'getStores', region: (CFG && CFG.region) || ''});
+  if(s && s.ok && s.stores){ STORES = s.stores; try{ sessionStorage.setItem(key, JSON.stringify({region:CFG.region,stores:STORES})); }catch(e){} return true; }
+  if(s && s.error){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--red)">Lỗi tải danh sách CH: ' + esc(s.error) + '</div>'; }
+  return false;
 }
 
 async function enterando(){
-  try{ await loadStores(); }catch(e){}
-  await loadTargets();
   $('loginBox').style.display = 'none'; $('dash').style.display = 'block';
   $('dTitle').textContent = CFG ? CFG.title : SID;
   $('updated').textContent = new Date().toLocaleString('vi-VN');
-  buildMien(); render();
+  const ok = await loadStores();
+  buildMien();
+  if(ok) render(); else { $('tableWrap').innerHTML = '<div class="empty">Chưa tải được danh sách CH — bấm ⚡ để thử lại</div>'; }
+  loadTargets().catch(()=>{});
 }
 
 function buildMien(){
@@ -225,6 +224,7 @@ async function loadTargets(){
   try{ const r = await call({action:'getTargets',id:SID});
     if(r.ok){ TARGET.saps = r.saps || []; TARGET.loaded = true; } }catch(e){}
   renderTargetList();
+  render();
 }
 function pasteTargets(){
   const tp = $('tPaste'); if(!tp) return;
