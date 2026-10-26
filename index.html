@@ -74,6 +74,17 @@
   .stars{display:flex; gap:3px; margin-top:8px; font-size:28px; cursor:pointer; user-select:none}
   .stars span{color:#d9dde5; transition:.1s}
   .stars span.on{color:var(--gold)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
+    z-index:999; padding:16px}
+  .modal{background:#fff;border-radius:16px;padding:22px;max-width:460px;width:100%;box-shadow:0 20px 48px rgba(0,0,0,.22)}
+  .modal h3{font-size:16px;font-weight:800;margin-bottom:16px;color:var(--navy)}
+  .modal .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .modal .row .l{color:var(--mut)} .modal .row .r{font-weight:600}
+  .btn2{flex:1;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn2.ghost{background:#f0f2f7;color:var(--txt)} .btn2.act{background:var(--navy);color:#fff}
+  .success{background:#e6f6ec;border:1.5px solid var(--green);border-radius:14px;padding:20px;margin-top:16px;text-align:center}
+  .success .ok{font-size:17px;font-weight:800;color:var(--green);margin-bottom:6px}
+  .success .d{font-size:13px;color:var(--mut);margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -110,10 +121,27 @@
   <div class="warn" id="warnBox"></div>
 
   <button class="btn" id="btnSubmit" disabled>Gửi kết quả</button>
+  <div class="success" id="successBox" style="display:none">
+    <div class="ok">✅ Đã hoàn thành khảo sát!</div>
+    <div class="d" id="successDetail"></div>
+    <button class="btn" style="background:var(--navy);margin-top:6px" onclick="resetForm()">🔍 Khảo sát cửa hàng khác</button>
+  </div>
   <div class="foot" id="foot"></div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Popup xác nhận gửi -->
+<div class="overlay" id="confirmOverlay" style="display:none">
+  <div class="modal">
+    <h3>📋 Xác nhận kết quả khảo sát</h3>
+    <div id="confirmBody"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn2 ghost" onclick="$('confirmOverlay').style.display='none'">🔙 Quay lại</button>
+      <button class="btn2 act" onclick="doSubmit()">✅ Xác nhận gửi</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ⚠️ Dán URL Web App (Survey Engine) vào đây:
@@ -208,6 +236,7 @@ function renderFields(){
 
   document.querySelectorAll('input[name]').forEach(el => el.addEventListener('change', refresh));
   document.querySelectorAll('#fields select, #fields input[type=date], #fields input[type=time]').forEach(el => el.addEventListener('change', refresh));
+  document.querySelectorAll('#fields input[type=number]').forEach(el => { el.addEventListener('input', refresh); el.addEventListener('change', refresh); });
   document.querySelectorAll('#fields .stars').forEach(st => st.addEventListener('click', onStar));
   document.querySelectorAll('#fields input[type=file]').forEach(inp => inp.addEventListener('change', onImage));
 
@@ -373,8 +402,29 @@ function collectValues(){
   return values;
 }
 
-async function submit(){
+function confirmSubmit(){
+  if(!selectedStore || !CFG) return;
+  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
+  const values = collectValues();
+  let html = '<div class="row"><span class="l">Cửa hàng</span><span class="r">' + esc(selectedStore.sap) + ' · ' + esc(selectedStore.ten) + '</span></div>';
+  html += '<div class="row"><span class="l">GĐV - QLKV</span><span class="r">' + esc(selectedStore.gdv||'') + ' — ' + esc(selectedStore.qlkv||'') + '</span></div>';
+  CFG.fields.forEach(f => {
+    let v = values[f.key];
+    if(f.type==='image') v = (v||[]).length + ' ảnh';
+    else if(f.type==='checkbox') v = Array.isArray(v) ? v.join(', ') : '';
+    html += '<div class="row"><span class="l">' + esc(f.label) + '</span><span class="r">' + esc(v) + '</span></div>';
+  });
+  if(CFG.sum){
+    const t = totalSum();
+    html += '<div class="row"><span class="l">' + esc(CFG.sum.label||'Tổng') + '</span><span class="r" style="color:'+(t>=CFG.sum.warn?'var(--red)':'inherit')+'">' + t + '</span></div>';
+  }
+  $('confirmBody').innerHTML = html;
+  $('confirmOverlay').style.display = 'flex';
+}
+
+async function doSubmit(){
   if(!selectedStore) return;
+  $('confirmOverlay').style.display = 'none';
   const d = { store: {
     sap:selectedStore.sap, ten:selectedStore.ten, tinh:selectedStore.tinh,
     huyen:selectedStore.huyen, qlkv:selectedStore.qlkv, gdv:selectedStore.gdv
@@ -382,8 +432,15 @@ async function submit(){
   $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Đang gửi...';
   try{
     const res = await call({action:'submit', id:SURVEY_ID, store:d.store, values:d.values});
-    if(res.ok){ showToast(res.warn ? '✅ Đã gửi! ' + res.warn : '✅ Đã gửi thành công!'); resetForm(); }
-    else { showToast('⚠️ ' + (res.error||'Lỗi'), true); $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả'; }
+    if(res.ok){
+      $('btnSubmit').style.display = 'none';
+      $('successBox').style.display = 'block';
+      $('successDetail').textContent = selectedStore.sap + ' · ' + selectedStore.ten + ' — ' + (selectedStore.gdv||'');
+      showToast('✅ Đã gửi thành công!');
+    } else {
+      showToast('⚠️ ' + (res.error||'Lỗi'), true);
+      $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
+    }
   }catch(e){
     showToast('⚠️ Không kết nối được máy chủ', true);
     $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
@@ -393,8 +450,10 @@ async function submit(){
 function resetForm(){
   selectedStore = null; IMG = {};
   $('vLine1').textContent = '—'; $('vLine2').textContent = '—';
+  $('successBox').style.display = 'none'; $('btnSubmit').style.display = 'block';
+  $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Gửi kết quả';
   renderFields();
-  buildMien();     // reset droplist CH
+  buildMien();
   refresh();
 }
 
@@ -409,7 +468,7 @@ $('selMien').addEventListener('change', buildVung);
 $('selVung').addEventListener('change', buildQlkv);
 $('selQlkv').addEventListener('change', buildCh);
 $('selCh').addEventListener('change', selectStore);
-$('btnSubmit').addEventListener('click', submit);
+$('btnSubmit').addEventListener('click', confirmSubmit);
 $('foot').innerHTML = '<a href="dashboard.html?s=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
 
 init();
