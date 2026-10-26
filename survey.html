@@ -104,7 +104,8 @@
 <script>
 // ⚠️ Dán URL Web App (Survey Engine) vào đây:
 const GAS_URL = '__GAS_URL__';
-const SURVEY_ID = new URLSearchParams(location.search).get('survey') || '';
+const _qp = new URLSearchParams(location.search);
+const SURVEY_ID = _qp.get('survey') || _qp.get('s') || '';
 
 let CFG = null, STORES = [], selectedStore = null;
 const $ = id => document.getElementById(id);
@@ -301,7 +302,7 @@ function showToast(msg, isErr){
 $('storeSearch').addEventListener('input', matchStore);
 $('storeSearch').addEventListener('change', matchStore);
 $('btnSubmit').addEventListener('click', submit);
-$('foot').innerHTML = '<a href="dashboard.html?survey=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
+$('foot').innerHTML = '<a href="dashboard.html?s=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
 
 init();
 </script>
