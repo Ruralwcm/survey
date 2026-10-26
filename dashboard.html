@@ -96,6 +96,7 @@
       <div class="hdr-acts">
         <button class="hdr-btn" onclick="refreshData()" title="Đồng bộ dữ liệu mới nhất">🔄</button>
         <button class="hdr-btn" onclick="showImport()" title="Khai báo CH khảo sát">📥 Import</button>
+        <button class="hdr-btn" onclick="exportMissing()" title="Xuất danh sách CH chưa khảo sát">📤 Export thiếu</button>
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
@@ -132,7 +133,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.17</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.18</span></div>
   </div>
 </div>
 
@@ -259,7 +260,7 @@ function render(){
   norm();
   const scoped = scopedRows();
   const total = scopeSaps().size;
-  const done = new Set(ROWS.map(r=>r.sap)).size;
+  const done = new Set(scoped.map(r=>r.sap)).size;
   const alert = scoped.filter(isWarn).length;
   const hasTargets = TARGET.loaded && TARGET.saps.length > 0;
 
@@ -385,6 +386,21 @@ async function refreshData(){
   try{ const res = await call({action:'getResults',id:SID,token:TOKEN});
     if(res.ok){ ROWS = res.rows || []; CFG = res.config; $('updated').textContent = new Date().toLocaleString('vi-VN'); render(); }
     else showErr('Lỗi đồng bộ'); }catch(e){ showErr('Không kết nối được'); }
+}
+
+function exportMissing(){
+  norm();
+  const set = scopeSaps();
+  const doneSet = new Set(scopedRows().map(r=>r.sap));
+  const missing = STORES.filter(s=>set.has(s.sap) && !doneSet.has(s.sap));
+  if(!missing.length){ showErr('Tất cả CH đã được khảo sát ✅'); return; }
+  const hdr = ['Mã SAP','Tên CH','Tỉnh/TP','Huyện','QLKV','GĐV'];
+  const rows = missing.map(s=>[s.sap,s.ten,s.tinh,s.huyen,s.qlkv,s.gdv]);
+  const csv = '\uFEFF' + hdr.join(',') + '\n' + rows.map(r=>r.map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'CH_Chua_Khao_Sat_' + SID + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(a.href);
 }
 function showErr(msg){ $('tErr').textContent = msg; $('tErr').style.display = 'block'; $('tErr').style.color = 'var(--red)'; }
 function showImport(){ const ov = $('importOverlay'); if(!ov) return; ov.style.display = 'flex'; $('importSaps').value = ''; }
