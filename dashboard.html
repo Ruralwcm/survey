@@ -54,6 +54,12 @@
   .grow{cursor:pointer; user-select:none}
   .grow .ar{display:inline-block; width:14px; font-size:11px; transition:.2s}
   .grow .ar.open{transform:rotate(90deg)}
+  .tab-btn{background:none;border:1.5px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;font-family:inherit;color:var(--mut);cursor:pointer;transition:.15s}
+  .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .sort-arrow{font-size:10px;margin-left:3px;opacity:.4}
+  .sort-arrow.on{opacity:1;color:var(--navy)}
+  th.sortable{cursor:pointer;user-select:none}
+  th.sortable:hover{color:var(--navy)}
   .gdv-row{display:flex; align-items:center; padding:8px 0; border-bottom:1px solid var(--line)}
   .gdv-row .name{font-weight:700; font-size:13px; min-width:140px}
   .gdv-row .bar-wrap{flex:1;height:8px;background:#e9edf5;border-radius:6px;overflow:hidden;margin:0 10px}
@@ -102,7 +108,7 @@
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.29</b> · <span id="storeStatus" style="font-size:12px"></span></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.31</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -115,8 +121,13 @@
       <div class="bar"><i id="barFill" style="width:0%"></i></div>
     </div>
     <div class="card">
-      <h2>📋 Theo GĐV</h2>
+      <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>📋</span>
+        <button class="tab-btn active" id="tabGdv" onclick="switchTab('gdv')">Theo GĐV</button>
+        <button class="tab-btn" id="tabTopQlkv" onclick="switchTab('topQlkv')">Top 20 QLKV</button>
+      </h2>
       <div id="gdvSection">Đang tải...</div>
+      <div id="topQlkvSection" style="display:none">Đang tải...</div>
     </div>
     <div class="card">
       <h2>🎯 Chọn địa bàn / CH</h2>
@@ -139,7 +150,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.29</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.31</span></div>
   </div>
 </div>
 
@@ -265,56 +276,129 @@ function render(){
   $('kAlert').textContent = alert;
   $('barFill').style.width = Math.min(100,pct) + '%';
   buildGdvSection();
+  buildTopQlkv();
   renderTable();
 }
 
-function buildGdvSection(){
+// --- sort state ---
+let SORT_G = {col: 'pct', asc: true}, SORT_T = {col: 'pct', asc: true};
+
+function sortArrow(col, st) {
+  if (st.col !== col) return '';
+  return st.asc ? ' ▲' : ' ▼';
+}
+
+function thSort(col, st, label) {
+  const arrow = sortArrow(col, st);
+  return `<th class="sortable col-${col}" onclick="sortBy('${col}','${st===SORT_G?'G':'T'}')">${label}<span class="sort-arrow${arrow?' on':''}">${arrow||' ↕'}</span></th>`;
+}
+
+// --- compute GĐV & QLKV data ---
+function computeGdvData() {
   const set = scopeSaps();
   const rows = scopedRows();
-  const doneSet = new Set(rows.map(r=>r.sap));
-  const sInScope = STORES.filter(s=>set.has(s.sap));
-  const gdvs = [...new Set(sInScope.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
-  if(!gdvs.length){ $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>'; return; }
-
-  const sumLabel = (CFG.sum||{}).label||'Tổng';
-  const warnLabel = (CFG.sum||{}).warnLabel||'CH có vấn đề';
-  let html = `<table class="gdv-table"><colgroup>
-    <col class="col-gdv"><col class="col-num"><col class="col-num"><col class="col-bar"><col class="col-pct"><col class="col-warn"><col class="col-sum">
-    </colgroup><thead><tr>
-    <th class="col-gdv">GĐV</th><th class="col-num">CH KS</th><th class="col-num">Đã làm</th><th class="bar-cell col-bar">Tỷ lệ</th><th class="col-pct">%</th>
-    <th class="col-warn">${esc(warnLabel)}</th><th class="col-sum">${esc(sumLabel)}</th></tr></thead><tbody>`;
-
-  gdvs.forEach(gdv => {
-    const cls = 'sub-' + gdv.replace(/[^a-zA-Z0-9]/g,'_');
-    const sGdv = sInScope.filter(s=>s.gdv===gdv);
+  const doneSet = new Set(rows.map(r => r.sap));
+  const sInScope = STORES.filter(s => set.has(s.sap));
+  const gdvs = [];
+  const gdvMap = {};
+  [...new Set(sInScope.map(s => s.gdv).filter(Boolean))].forEach(gdv => {
+    const sGdv = sInScope.filter(s => s.gdv === gdv);
     const t = sGdv.length;
-    const d = sGdv.filter(s=>doneSet.has(s.sap)).length;
-    const pct = t ? Math.round(d/t*100) : 0;
-    const rGdv = rows.filter(r=>sGdv.some(s=>s.sap===r.sap));
+    const d = sGdv.filter(s => doneSet.has(s.sap)).length;
+    const pct = t ? Math.round(d / t * 100) : 0;
+    const rGdv = rows.filter(r => sGdv.some(s => s.sap === r.sap));
     const warn = rGdv.filter(isWarn).length;
-    const sumTot = rGdv.reduce((a,r)=>a+(r.total||0),0);
+    const sumTot = rGdv.reduce((a, r) => a + (r.total || 0), 0);
+    const qlkvs = [...new Set(sGdv.map(s => s.qlkv).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'vi'));
+    const qlkvArr = qlkvs.map(q => {
+      const sQ = sGdv.filter(s => s.qlkv === q);
+      const qt = sQ.length, qd = sQ.filter(s => doneSet.has(s.sap)).length;
+      const qpct = qt ? Math.round(qd / qt * 100) : 0;
+      const rQ = rows.filter(r => sQ.some(s => s.sap === r.sap));
+      return { qlkv: q, t: qt, d: qd, pct: qpct, warn: rQ.filter(isWarn).length, sum: rQ.reduce((a, r) => a + (r.total || 0), 0) };
+    });
+    gdvMap[gdv] = { gdv, t, d, pct, warn, sumTot, qlkvs: qlkvArr };
+    gdvs.push(gdvMap[gdv]);
+  });
+  return { gdvs, gdvMap };
+}
+
+const SORT_FNS = {
+  gdv: (a, b) => String(a.gdv).localeCompare(String(b.gdv), 'vi'),
+  t: (a, b) => a.t - b.t,
+  d: (a, b) => a.d - b.d,
+  pct: (a, b) => a.pct - b.pct,
+  warn: (a, b) => a.warn - b.warn,
+  sumTot: (a, b) => a.sumTot - b.sumTot
+};
+
+function sortBy(col, which) {
+  const st = which === 'G' ? SORT_G : SORT_T;
+  if (st.col === col) st.asc = !st.asc;
+  else { st.col = col; st.asc = (col === 'pct' || col === 'gdv'); }
+  if (which === 'G') buildGdvSection();
+  else buildTopQlkv();
+}
+
+function buildGdvSection() {
+  const { gdvs } = computeGdvData();
+  if (!gdvs.length) { $('gdvSection').innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>'; return; }
+  const sf = SORT_FNS[SORT_G.col] || SORT_FNS.pct;
+  gdvs.sort((a, b) => { const v = sf(a, b); return SORT_G.asc ? v : -v; });
+  const sumLabel = (CFG.sum || {}).label || 'Tổng';
+  const warnLabel = (CFG.sum || {}).warnLabel || 'CH có vấn đề';
+  let html = '<table class="gdv-table"><colgroup><col class="col-gdv"><col class="col-num"><col class="col-num"><col class="col-bar"><col class="col-pct"><col class="col-warn"><col class="col-sum"></colgroup><thead><tr>';
+  html += thSort('gdv', SORT_G, 'GĐV') + thSort('t', SORT_G, 'CH KS') + thSort('d', SORT_G, 'Đã làm') + '<th class="bar-cell col-bar">Tỷ lệ</th>' + thSort('pct', SORT_G, '%') + thSort('warn', SORT_G, warnLabel) + thSort('sumTot', SORT_G, sumLabel);
+  html += '</tr></thead><tbody>';
+  gdvs.forEach(g => {
+    const cls = 'sub-' + g.gdv.replace(/[^a-zA-Z0-9]/g, '_');
     html += `<tr class="grow" onclick="toggleGdv(this,'${cls}')" style="cursor:pointer">
-      <td class="col-gdv"><span class="ar">▶</span> ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
-      <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
-      <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
-    // QLKV rows — same table, same column widths
-    const qlkvs = [...new Set(sGdv.map(s=>s.qlkv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
-    qlkvs.forEach(q => {
-      const sQ = sGdv.filter(s=>s.qlkv===q);
-      const qt = sQ.length;
-      const qd = sQ.filter(s=>doneSet.has(s.sap)).length;
-      const qpct = qt?Math.round(qd/qt*100):0;
-      const rQ = rows.filter(r=>sQ.some(s=>s.sap===r.sap));
-      const qwarn = rQ.filter(isWarn).length;
-      const qsum = rQ.reduce((a,r)=>a+(r.total||0),0);
+      <td class="col-gdv"><span class="ar">▶</span> ${esc(g.gdv)}</td><td class="col-num">${g.t}</td><td class="col-num">${g.d}</td>
+      <td class="bar-cell col-bar"><i style="width:${g.pct}%"></i></td><td class="col-pct">${g.pct}%</td>
+      <td class="col-warn" style="color:${g.warn?'var(--red)':'inherit'}">${g.warn||'—'}</td><td class="col-sum">${g.sumTot||'—'}</td></tr>`;
+    g.qlkvs.forEach(q => {
       html += `<tr class="gdv-sub ${cls}" style="display:none">
-        <td class="col-gdv qlkv-name">${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
-        <td class="bar-cell col-bar"><i style="width:${qpct}%"></i></td><td class="col-pct">${qpct}%</td>
-        <td class="col-warn" style="color:${qwarn?'var(--red)':'inherit'}">${qwarn||'—'}</td><td class="col-sum">${qsum||'—'}</td></tr>`;
+        <td class="col-gdv qlkv-name">${esc(q.qlkv)}</td><td class="col-num">${q.t}</td><td class="col-num">${q.d}</td>
+        <td class="bar-cell col-bar"><i style="width:${q.pct}%"></i></td><td class="col-pct">${q.pct}%</td>
+        <td class="col-warn" style="color:${q.warn?'var(--red)':'inherit'}">${q.warn||'—'}</td><td class="col-sum">${q.sum||'—'}</td></tr>`;
     });
   });
   html += '</tbody></table>';
   $('gdvSection').innerHTML = html;
+}
+
+function buildTopQlkv() {
+  const { gdvs } = computeGdvData();
+  const all = [];
+  gdvs.forEach(g => { g.qlkvs.forEach(q => { all.push({ ...q, gdv: g.gdv }); }); });
+  if (!all.length) { $('topQlkvSection').innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có dữ liệu</div>'; return; }
+  const sf = SORT_FNS[SORT_T.col] || SORT_FNS.pct;
+  all.sort((a, b) => { const v = sf(a, b); return SORT_T.asc ? v : -v; });
+  const top = all.slice(0, 20);
+  const sumLabel = (CFG.sum || {}).label || 'Tổng';
+  const warnLabel = (CFG.sum || {}).warnLabel || 'CH có vấn đề';
+  let html = '<table class="gdv-table"><colgroup><col class="col-gdv"><col class="col-gdv"><col class="col-num"><col class="col-num"><col class="col-bar"><col class="col-pct"><col class="col-warn"><col class="col-sum"></colgroup><thead><tr>';
+  html += thSort('gdv', SORT_T, 'GĐV') + '<th class="sortable col-gdv">QLKV</th>' + thSort('t', SORT_T, 'CH KS') + thSort('d', SORT_T, 'Đã làm') + '<th class="bar-cell col-bar">Tỷ lệ</th>' + thSort('pct', SORT_T, '%') + thSort('warn', SORT_T, warnLabel) + thSort('sumTot', SORT_T, sumLabel);
+  html += '</tr></thead><tbody>';
+  top.forEach(q => {
+    html += `<tr>
+      <td class="col-gdv">${esc(q.gdv)}</td><td class="col-gdv qlkv-name" style="padding-left:4px;font-weight:500">${esc(q.qlkv)}</td>
+      <td class="col-num">${q.t}</td><td class="col-num">${q.d}</td>
+      <td class="bar-cell col-bar"><i style="width:${q.pct}%"></i></td><td class="col-pct">${q.pct}%</td>
+      <td class="col-warn" style="color:${q.warn?'var(--red)':'inherit'}">${q.warn||'—'}</td><td class="col-sum">${q.sum||'—'}</td></tr>`;
+  });
+  html += `<tr><td colspan="8" style="text-align:center;font-size:11px;color:var(--mut);padding:8px">Hiển thị ${top.length}/${all.length} QLKV · Sắp xếp theo <b>${SORT_T.col==='pct'?'% hoàn thành ↓':SORT_T.col}</b></td></tr>`;
+  html += '</tbody></table>';
+  $('topQlkvSection').innerHTML = html;
+}
+
+function switchTab(tab) {
+  $('tabGdv').classList.toggle('active', tab === 'gdv');
+  $('tabTopQlkv').classList.toggle('active', tab === 'topQlkv');
+  $('gdvSection').style.display = tab === 'gdv' ? '' : 'none';
+  $('topQlkvSection').style.display = tab === 'topQlkv' ? '' : 'none';
+  if (tab === 'topQlkv') buildTopQlkv();
+  else buildGdvSection();
 }
 
 let gdvOpen = {};
