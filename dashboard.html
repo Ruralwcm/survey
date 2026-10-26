@@ -30,9 +30,11 @@
   .cas select,.filters input{padding:11px 13px; border:1.5px solid var(--line); border-radius:10px;
     font-family:inherit; font-size:14px; background:#fafbfd; outline:none; width:100%}
   .filters{margin-top:10px}
-  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px}
-  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line)}
+  .tbl-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%}
+  table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; white-space:nowrap}
+  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line); max-width:200px; overflow:hidden; text-overflow:ellipsis}
   th{background:#f6f8fc; color:var(--mut); font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px}
+  th.nw,td.nw{white-space:nowrap}
   td.num{font-weight:700}
   .tag{display:inline-block; padding:3px 9px; border-radius:16px; font-size:11px; font-weight:700}
   .tag.ok{background:#e6f6ec; color:var(--green)} .tag.warn{background:#fdeeee; color:var(--red)}
@@ -126,7 +128,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.3</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.4</span></div>
   </div>
 </div>
 
@@ -369,7 +371,7 @@ function renderTable(){
     html += '</tr>';
   }
   html += '</tbody></table>';
-  $('tableWrap').innerHTML = html;
+  $('tableWrap').innerHTML = '<div class="tbl-scroll">' + html + '</div>';
 }
 
 async function refreshData(){
