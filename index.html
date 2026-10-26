@@ -484,13 +484,15 @@ function showUnsurveyed(){
   $('unsurveyedCount').textContent = undone.length + '/' + qStores.length + ' CH chưa làm';
   if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả đồng đội đã hoàn thành khảo sát! 🎉</div>'; }
   else {
-    const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+    $('unsurveyedQlkv').textContent = selectedStore.gdv + ' — ' + lastQlkv + ' — ' + undone.length + '/' + qStores.length + ' CH chưa làm';
+    // group stores by GĐV
     let html = '';
+    const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
     gdvs.forEach(g => {
       const gStores = undone.filter(s=>s.gdv===g);
-      html += '<div style="font-weight:700;color:var(--navy);margin-top:8px">' + esc(g) + ' · ' + gStores.length + ' CH</div>';
+      html += '<div style="font-weight:700;color:var(--navy);margin-top:6px">' + esc(g) + ' · ' + gStores.length + ' CH</div>';
       gStores.forEach(s => {
-        html += '<div style="padding-left:8px">' + esc(s.sap) + ' · ' + esc(s.ten) + ' · ' + esc(s.tinh||'') + '</div>';
+        html += '<div style="padding-left:8px;font-size:12px">' + esc(s.sap) + ' · ' + esc(s.ten) + ' · ' + esc(s.tinh||'') + '</div>';
       });
     });
     $('unsurveyedList').innerHTML = html;
