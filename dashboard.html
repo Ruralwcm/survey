@@ -60,14 +60,15 @@
   .gdv-row .bar-wrap i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:6px}
   .gdv-row .stat{font-size:12px;white-space:nowrap;color:var(--mut);min-width:70px;text-align:right}
   .qlkv-sub{margin-left:20px;padding:4px 0;border-bottom:1px solid #f0f2f6}
-  .gdv-table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
-  .gdv-table th{background:#f6f8fc;color:var(--mut);font-size:11px;font-weight:700;padding:8px 10px;text-align:right;border-bottom:2px solid var(--line)}
+  .gdv-table{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:4px;font-size:13px}
+  .gdv-table th{background:#f6f8fc;color:var(--mut);font-size:11px;font-weight:700;padding:8px 6px;text-align:right;border-bottom:2px solid var(--line);overflow:hidden;text-overflow:ellipsis}
   .gdv-table th.left{text-align:left}
-  .gdv-table td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  .gdv-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;overflow:hidden;text-overflow:ellipsis}
   .gdv-table td.left{text-align:left;font-weight:600}
-  .gdv-table .bar-cell{min-width:80px}
+  .gdv-table .bar-cell{min-width:0}
   .gdv-table .bar-cell i{display:block;height:7px;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:5px}
   .gdv-table .qlkv-name{padding-left:24px;font-weight:500;font-size:12px}
+  .col-gdv{width:18%}.col-num{width:7%}.col-bar{width:28%}.col-pct{width:6%}.col-warn{width:20%}.col-sum{width:21%}
   .gdv-sub{display:none}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
     z-index:999; padding:14px}
@@ -131,7 +132,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.7</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.8</span></div>
   </div>
 </div>
 
@@ -281,8 +282,8 @@ function buildGdvSection(){
   const sumLabel = (CFG.sum||{}).label||'Tổng';
   const warnLabel = (CFG.sum||{}).warnLabel||'CH có vấn đề';
   let html = `<table class="gdv-table"><thead><tr>
-    <th class="left">GĐV</th><th>CH KS</th><th>Đã làm</th><th class="bar-cell">Tỷ lệ</th><th>%</th>
-    <th>${esc(warnLabel)}</th><th>${esc(sumLabel)}</th></tr></thead><tbody>`;
+    <th class="left col-gdv">GĐV</th><th class="col-num">CH KS</th><th class="col-num">Đã làm</th><th class="bar-cell col-bar">Tỷ lệ</th><th class="col-pct">%</th>
+    <th class="col-warn">${esc(warnLabel)}</th><th class="col-sum">${esc(sumLabel)}</th></tr></thead><tbody>`;
 
   gdvs.forEach(gdv => {
     const sGdv = sInScope.filter(s=>s.gdv===gdv);
@@ -294,9 +295,9 @@ function buildGdvSection(){
     const sumTot = rGdv.reduce((a,r)=>a+(r.total||0),0);
     const subId = 'sub_' + gdv.replace(/[^a-zA-Z0-9]/g,'_');
     html += `<tr class="grow" onclick="toggleGdv('${esc(gdv)}','${subId}')" style="cursor:pointer">
-      <td class="left">▶ ${esc(gdv)}</td><td>${t}</td><td>${d}</td>
-      <td class="bar-cell"><i style="width:${pct}%"></i></td><td>${pct}%</td>
-      <td style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td>${sumTot||'—'}</td></tr>`;
+      <td class="left col-gdv">▶ ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
+      <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
+      <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
     html += `<tr class="gdv-sub" id="${subId}"><td colspan="7" style="padding:0"><div id="${subId}_inner"></div></td></tr>`;
   });
   html += '</tbody></table>';
@@ -331,9 +332,9 @@ function fillQlkvTable(gdv, targetId){
     const warn = rQ.filter(isWarn).length;
     const sumTot = rQ.reduce((a,r)=>a+(r.total||0),0);
     html += `<tr>
-      <td class="left qlkv-name">${esc(q)}</td><td>${t}</td><td>${d}</td>
-      <td class="bar-cell"><i style="width:${pct}%"></i></td><td>${pct}%</td>
-      <td style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td>${sumTot||'—'}</td></tr>`;
+      <td class="left qlkv-name col-gdv">${esc(q)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
+      <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
+      <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById(targetId).innerHTML = html || '<div style="font-size:12px;color:var(--mut);padding:8px">—</div>';
