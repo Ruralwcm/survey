@@ -132,7 +132,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.9</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.10</span></div>
   </div>
 </div>
 
@@ -168,7 +168,7 @@ async function login(){
 }
 
 async function enterando(){
-  try{ const s = await call({action:'getStores', region:''}); if(s.ok) STORES = s.stores || []; }catch(e){}
+  try{ const s = await call({action:'getStores', region: (CFG && CFG.region) || ''}); if(s.ok) STORES = s.stores || []; }catch(e){}
   await loadTargets();
   $('loginBox').style.display = 'none'; $('dash').style.display = 'block';
   $('dTitle').textContent = CFG ? CFG.title : SID;
@@ -256,7 +256,7 @@ function scopedRows(){
 function render(){
   const scoped = scopedRows();
   const total = scopeSaps().size;
-  const done = new Set(scoped.map(r=>r.sap)).size;
+  const done = new Set(ROWS.map(r=>r.sap)).size;
   const alert = scoped.filter(isWarn).length;
   const hasTargets = TARGET.loaded && TARGET.saps.length > 0;
 
