@@ -95,6 +95,7 @@
     <div class="head">
       <div class="hdr-acts">
         <button class="hdr-btn" onclick="refreshData()" title="Đồng bộ dữ liệu mới nhất">🔄</button>
+        <button class="hdr-btn" onclick="hardRefresh()" title="Tải lại toàn bộ (xóa cache)">⚡</button>
         <button class="hdr-btn" onclick="showImport()" title="Khai báo CH khảo sát">📥 Import</button>
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
@@ -136,7 +137,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.19</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.20</span></div>
   </div>
 </div>
 
@@ -171,8 +172,24 @@ async function login(){
   }catch(e){ $('loginErr').textContent = 'Lỗi kết nối: '+e.message; $('loginErr').style.display = 'block'; }
 }
 
+async function loadStores(){
+  // 1. Try localStorage cache first
+  const key = 'sv_stores_' + SID;
+  const cached = sessionStorage.getItem(key);
+  if(cached){ try{ const d=JSON.parse(cached); if(d.region===CFG.region && d.stores.length){ STORES=d.stores; return; } }catch(e){} }
+  // 2. Fetch all stores (no region filter = faster)
+  const s = await call({action:'getStores', region:''});
+  if(s && s.ok && s.stores){
+    // 3. Filter by region on client side
+    const reg = (CFG.region||'').trim().toLowerCase();
+    STORES = reg ? s.stores.filter(x=>(x.mien||'').trim().toLowerCase()===reg) : s.stores;
+    // 4. Cache for next time
+    try{ sessionStorage.setItem(key, JSON.stringify({region:CFG.region,stores:STORES})); }catch(e){}
+  }
+}
+
 async function enterando(){
-  try{ const s = await call({action:'getStores', region: (CFG && CFG.region) || ''}); if(s.ok) STORES = s.stores || []; }catch(e){}
+  try{ await loadStores(); }catch(e){}
   await loadTargets();
   $('loginBox').style.display = 'none'; $('dash').style.display = 'block';
   $('dTitle').textContent = CFG ? CFG.title : SID;
@@ -389,6 +406,10 @@ async function refreshData(){
   try{ const res = await call({action:'getResults',id:SID,token:TOKEN});
     if(res.ok){ ROWS = res.rows || []; CFG = res.config; $('updated').textContent = new Date().toLocaleString('vi-VN'); render(); }
     else showErr('Lỗi đồng bộ'); }catch(e){ showErr('Không kết nối được'); }
+}
+function hardRefresh(){
+  sessionStorage.removeItem('sv_stores_'+SID);
+  location.reload();
 }
 
 function exportMissing(){
