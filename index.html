@@ -26,12 +26,8 @@
   input,select,textarea{width:100%; font-size:15px; font-family:inherit; padding:12px 14px;
     border:1.5px solid var(--line); border-radius:10px; background:#fafbfd; color:var(--txt); outline:none}
   input:focus,select:focus,textarea:focus{border-color:var(--navy); background:#fff}
-  .store-info{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px}
-  .store-info .it{background:#f6f8fc; border:1px solid var(--line); border-radius:10px; padding:10px 12px}
-  .store-info .it .k{font-size:11px; color:var(--mut); margin-bottom:2px}
-  .store-info .it .v{font-size:14px; font-weight:600}
-  .maplink{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--navy);
-    text-decoration:none; background:#eef3fb; padding:9px 14px; border-radius:10px}
+  .store-info{margin-top:12px}
+  .st-line{font-size:13.5px; font-weight:600; color:var(--txt); margin:3px 0}
   .cas{display:grid; grid-template-columns:1fr 1fr; gap:10px}
   .cas select{width:100%}
   .cas label{margin:0 0 4px}
@@ -97,12 +93,9 @@
       <div><label>Cửa hàng</label><select id="selCh"><option value="">— CH —</option></select></div>
     </div>
     <div class="store-info">
-      <div class="it"><div class="k">Tỉnh/TP</div><div class="v" id="vTinh">—</div></div>
-      <div class="it"><div class="k">Quận/Huyện</div><div class="v" id="vHuyen">—</div></div>
-      <div class="it"><div class="k">QLKV</div><div class="v" id="vQlkv">—</div></div>
-      <div class="it"><div class="k">GĐV</div><div class="v" id="vGdv">—</div></div>
+      <div class="st-line" id="vLine1">—</div>
+      <div class="st-line" id="vLine2">—</div>
     </div>
-    <a id="mapLink" href="#" target="_blank" style="display:none" class="maplink">📍 Xem vị trí cửa hàng trên bản đồ</a>
   </div>
 
   <div class="card">
@@ -359,19 +352,12 @@ function selectStore(){
   const found = STORES.find(s=>s.sap===sap);
   if(found){
     selectedStore = found;
-    $('vTinh').textContent = found.tinh || '—';
-    $('vHuyen').textContent = found.huyen || '—';
-    $('vQlkv').textContent = found.qlkv || '—';
-    $('vGdv').textContent = found.gdv || '—';
-    const ml = $('mapLink');
-    if(found.lat && found.lng && parseFloat(found.lat) && parseFloat(found.lng)){
-      ml.href = 'https://www.google.com/maps/search/?api=1&query=' + found.lat + ',' + found.lng;
-      ml.style.display = 'inline-block';
-    } else ml.style.display = 'none';
+    $('vLine1').textContent = found.sap + ' — ' + found.ten + ' — ' + (found.tinh||'') + ' — ' + (found.huyen||'');
+    $('vLine2').textContent = 'GĐV: ' + (found.gdv||'—') + ' — QLKV: ' + (found.qlkv||'—');
   } else {
     selectedStore = null;
-    $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
-    $('mapLink').style.display = 'none';
+    $('vLine1').textContent = '—';
+    $('vLine2').textContent = '—';
   }
   updateReady();
 }
@@ -406,9 +392,8 @@ async function submit(){
 
 function resetForm(){
   selectedStore = null; IMG = {};
-  $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
-  $('mapLink').style.display = 'none';
-  renderFields();  // dựng lại form mặc định
+  $('vLine1').textContent = '—'; $('vLine2').textContent = '—';
+  renderFields();
   buildMien();     // reset droplist CH
   refresh();
 }
