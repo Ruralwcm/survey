@@ -32,6 +32,9 @@
   .store-info .it .v{font-size:14px; font-weight:600}
   .maplink{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--navy);
     text-decoration:none; background:#eef3fb; padding:9px 14px; border-radius:10px}
+  .cas{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .cas select{width:100%}
+  .cas label{margin:0 0 4px}
   .sec{border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:12px; background:#fff}
   .sec .st{display:flex; align-items:center; gap:14px}
   .sec .st .name{flex:1; font-size:14.5px; font-weight:700}
@@ -86,10 +89,13 @@
   </div>
 
   <div class="card">
-    <h2>1️⃣ Chọn cửa hàng</h2>
-    <label for="storeSearch">Tìm theo Mã SAP hoặc Tên cửa hàng</label>
-    <input id="storeSearch" list="storeList" placeholder="Nhập tên hoặc mã SAP..." autocomplete="off">
-    <datalist id="storeList"></datalist>
+    <h2>1️⃣ Khai báo cửa hàng</h2>
+    <div class="cas">
+      <div><label>Miền</label><select id="selMien"><option value="">— Miền —</option></select></div>
+      <div><label>Vùng (GĐV)</label><select id="selVung"><option value="">— Vùng —</option></select></div>
+      <div><label>QLKV</label><select id="selQlkv"><option value="">— QLKV —</option></select></div>
+      <div><label>Cửa hàng</label><select id="selCh"><option value="">— CH —</option></select></div>
+    </div>
     <div class="store-info">
       <div class="it"><div class="k">Tỉnh/TP</div><div class="v" id="vTinh">—</div></div>
       <div class="it"><div class="k">Quận/Huyện</div><div class="v" id="vHuyen">—</div></div>
@@ -148,11 +154,10 @@ async function init(){
     if(CFG.region){ $('regionBadge').textContent = '📍 ' + CFG.region; $('regionBadge').style.display='inline-block'; }
     document.title = CFG.title;
 
-    // load stores với region đúng
-    const st2 = await call({action:'getStores', region:CFG.region || ''});
+    // load toàn bộ CH để dựng droplist Miền → Vùng → QLKV → CH
+    const st2 = await call({action:'getStores', region:''});
     if(st2.ok) STORES = st2.stores || [];
-    const dl = $('storeList');
-    dl.innerHTML = STORES.map(s=>`<option value="${esc(s.sap)} · ${esc(s.ten)}">`).join('');
+    buildMien();
 
     renderFields();
     refresh();
@@ -319,16 +324,45 @@ function updateReady(){
     : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
 }
 
-function matchStore(){
-  const v = $('storeSearch').value.trim();
-  const found = STORES.find(s => `${s.sap} · ${s.ten}` === v);
+function distinct(arr){ return [...new Set(arr)].sort((a,b)=>String(a).localeCompare(String(b),'vi')); }
+
+function buildMien(){
+  const miens = distinct(STORES.map(s=>s.mien).filter(Boolean));
+  $('selMien').innerHTML = '<option value="">— Miền —</option>' + miens.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  if(CFG.region && miens.includes(CFG.region)) $('selMien').value = CFG.region;
+  buildVung();
+}
+
+function buildVung(){
+  const m = $('selMien').value;
+  const gdvs = distinct(STORES.filter(s=>!m||s.mien===m).map(s=>s.gdv).filter(Boolean));
+  $('selVung').innerHTML = '<option value="">— Vùng (GĐV) —</option>' + gdvs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  buildQlkv();
+}
+
+function buildQlkv(){
+  const m = $('selMien').value, v = $('selVung').value;
+  const qs = distinct(STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)).map(s=>s.qlkv).filter(Boolean));
+  $('selQlkv').innerHTML = '<option value="">— QLKV —</option>' + qs.map(q=>`<option value="${esc(q)}">${esc(q)}</option>`).join('');
+  buildCh();
+}
+
+function buildCh(){
+  const m=$('selMien').value, v=$('selVung').value, q=$('selQlkv').value;
+  const chs = STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)&&(!q||s.qlkv===q));
+  $('selCh').innerHTML = '<option value="">— Cửa hàng —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
+  selectStore();
+}
+
+function selectStore(){
+  const sap = $('selCh').value;
+  const found = STORES.find(s=>s.sap===sap);
   if(found){
     selectedStore = found;
     $('vTinh').textContent = found.tinh || '—';
     $('vHuyen').textContent = found.huyen || '—';
     $('vQlkv').textContent = found.qlkv || '—';
     $('vGdv').textContent = found.gdv || '—';
-    $('storeSearch').style.borderColor = 'var(--green)';
     const ml = $('mapLink');
     if(found.lat && found.lng && parseFloat(found.lat) && parseFloat(found.lng)){
       ml.href = 'https://www.google.com/maps/search/?api=1&query=' + found.lat + ',' + found.lng;
@@ -337,7 +371,6 @@ function matchStore(){
   } else {
     selectedStore = null;
     $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
-    $('storeSearch').style.borderColor = 'var(--line)';
     $('mapLink').style.display = 'none';
   }
   updateReady();
@@ -373,10 +406,10 @@ async function submit(){
 
 function resetForm(){
   selectedStore = null; IMG = {};
-  $('storeSearch').value = '';
   $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
   $('mapLink').style.display = 'none';
   renderFields();  // dựng lại form mặc định
+  buildMien();     // reset droplist CH
   refresh();
 }
 
@@ -387,8 +420,10 @@ function showToast(msg, isErr){
   t.classList.add('show'); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
-$('storeSearch').addEventListener('input', matchStore);
-$('storeSearch').addEventListener('change', matchStore);
+$('selMien').addEventListener('change', buildVung);
+$('selVung').addEventListener('change', buildQlkv);
+$('selQlkv').addEventListener('change', buildCh);
+$('selCh').addEventListener('change', selectStore);
 $('btnSubmit').addEventListener('click', submit);
 $('foot').innerHTML = '<a href="dashboard.html?s=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
 
