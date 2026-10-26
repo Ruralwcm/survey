@@ -60,6 +60,21 @@
     transition:.3s; box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:50}
   .toast.show{transform:translateX(-50%) translateY(0)}
   .foot{text-align:center; color:var(--mut); font-size:11.5px; margin-top:20px}
+  /* extra field types */
+  .cboxes{display:flex; flex-direction:column; gap:6px; margin-top:4px}
+  .cboxes label{display:flex; align-items:center; gap:9px; margin:0; font-size:14px; font-weight:500;
+    color:var(--txt); cursor:pointer}
+  .cboxes input{width:auto}
+  .uploadlabel{display:inline-block; padding:10px 16px; background:#eef3fb; border:1.5px dashed var(--navy);
+    border-radius:10px; color:var(--navy); font-weight:600; font-size:13px; cursor:pointer; margin-top:8px}
+  .thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .thumb{position:relative}
+  .thumb img{width:82px; height:82px; object-fit:cover; border-radius:10px; border:1px solid var(--line)}
+  .thumb .del{position:absolute; top:-7px; right:-7px; background:var(--red); color:#fff; border-radius:50%;
+    width:21px; height:21px; line-height:19px; text-align:center; font-size:12px; cursor:pointer; font-weight:700}
+  .stars{display:flex; gap:3px; margin-top:8px; font-size:28px; cursor:pointer; user-select:none}
+  .stars span{color:#d9dde5; transition:.1s}
+  .stars span.on{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -107,7 +122,7 @@ const GAS_URL = '__GAS_URL__';
 const _qp = new URLSearchParams(location.search);
 const SURVEY_ID = _qp.get('survey') || _qp.get('s') || '';
 
-let CFG = null, STORES = [], selectedStore = null;
+let CFG = null, STORES = [], selectedStore = null, IMG = {};
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -154,41 +169,113 @@ function renderFields(){
     wrap.dataset.showKey = f.showWhen ? Object.keys(f.showWhen)[0] : '';
     wrap.dataset.showVal = f.showWhen ? f.showWhen[Object.keys(f.showWhen)[0]] : '';
 
-    let inner = `<div class="st"><div class="name">${esc(f.label)}</div>`;
+    let inner = `<div class="st"><div class="name">${esc(f.label)}`;
+    if(f.required) inner += ` <span style="color:var(--red)">*</span>`;
+    inner += `</div>`;
+
     if(f.type === 'radio'){
       inner += `<div class="radios">` + f.options.map((o,i)=>
         `<label><input type="radio" name="${esc(f.key)}" value="${esc(o)}" ${i===0?'checked':''}><span>${esc(o)}</span></label>`
-      ).join('') + `</div>`;
-      inner += `</div>`;
+      ).join('') + `</div></div>`;
     } else if(f.type === 'select'){
-      inner += `<select id="${esc(f.key)}">` + f.options.map(o=>`<option>${esc(o)}</option>`).join('') + `</select>`;
-      inner += `</div>`;
+      inner += `<select id="${esc(f.key)}">` + f.options.map(o=>`<option>${esc(o)}</option>`).join('') + `</select></div>`;
     } else if(f.type === 'number'){
       inner += `<div class="num show"><input id="${esc(f.key)}" type="number" min="0" inputmode="numeric" placeholder="0"></div></div>`;
+    } else if(f.type === 'date'){
+      inner += `<input id="${esc(f.key)}" type="date"></div>`;
+    } else if(f.type === 'time'){
+      inner += `<input id="${esc(f.key)}" type="time"></div>`;
+    } else if(f.type === 'url'){
+      inner += `<input id="${esc(f.key)}" type="url" placeholder="https://..."></div>`;
+    } else if(f.type === 'rating'){
+      const mx = f.max || 5;
+      inner += `</div><input type="hidden" id="${esc(f.key)}" value="${mx}"><div class="stars" data-key="${esc(f.key)}" data-max="${mx}">` +
+        Array.from({length:mx},(_,i)=>`<span data-v="${i+1}">★</span>`).join('') + `</div>`;
+    } else if(f.type === 'checkbox'){
+      inner += `</div><div class="cboxes">` + f.options.map((o,i)=>
+        `<label><input type="checkbox" name="${esc(f.key)}" value="${esc(o)}"> ${esc(o)}</label>`
+      ).join('') + `</div>`;
+    } else if(f.type === 'image'){
+      inner += `</div><label class="uploadlabel" for="file_${esc(f.key)}">📷 Chụp/chọn ảnh${f.multiple?' (nhiều ảnh)':''}</label>` +
+        `<input type="file" id="file_${esc(f.key)}" accept="image/*" ${f.capture?'capture="environment"':''} ${f.multiple?'multiple':''} style="display:none">` +
+        `<div class="thumbs" id="thumbs_${esc(f.key)}"></div>`;
     } else if(f.type === 'textarea'){
       inner += `</div><textarea id="${esc(f.key)}" rows="3"></textarea>`;
-    } else {
+    } else { // text
       inner += `</div><input id="${esc(f.key)}" type="text">`;
     }
     wrap.innerHTML = inner;
     box.appendChild(wrap);
   });
 
-  // listeners
   document.querySelectorAll('input[name]').forEach(el => el.addEventListener('change', refresh));
-  document.querySelectorAll('#fields select').forEach(el => el.addEventListener('change', refresh));
+  document.querySelectorAll('#fields select, #fields input[type=date], #fields input[type=time]').forEach(el => el.addEventListener('change', refresh));
+  document.querySelectorAll('#fields .stars').forEach(st => st.addEventListener('click', onStar));
+  document.querySelectorAll('#fields input[type=file]').forEach(inp => inp.addEventListener('change', onImage));
 
-  if(CFG.sum){
-    $('sumBox').style.display = 'flex';
-    $('sumLbl').textContent = CFG.sum.label || 'Tổng';
-  } else $('sumBox').style.display = 'none';
+  if(CFG.sum){ $('sumBox').style.display = 'flex'; $('sumLbl').textContent = CFG.sum.label || 'Tổng'; }
+  else $('sumBox').style.display = 'none';
+}
+
+function onStar(e){
+  const st = e.currentTarget;
+  const v = e.target.getAttribute && e.target.getAttribute('data-v');
+  if(!v) return;
+  $('#' + st.dataset.key).value = v;
+  st.querySelectorAll('span').forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= parseInt(v)));
+}
+
+function resizeImage(file){
+  return new Promise(res => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1280;
+        let w = img.width, h = img.height;
+        if(w > MAX){ h = h * MAX / w; w = MAX; }
+        if(h > MAX){ w = w * MAX / h; h = MAX; }
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = () => res(null);
+      img.src = fr.result;
+    };
+    fr.onerror = () => res(null);
+    fr.readAsDataURL(file);
+  });
+}
+
+async function onImage(e){
+  const key = e.target.id.replace('file_','');
+  const files = [...e.target.files];
+  for(const file of files){
+    const b64 = await resizeImage(file);
+    if(b64){ IMG[key] = IMG[key] || []; IMG[key].push(b64); }
+  }
+  e.target.value = '';
+  renderThumbs(key);
+}
+
+function renderThumbs(key){
+  const box = $('thumbs_' + key);
+  const arr = IMG[key] || [];
+  box.innerHTML = arr.map((b64,i)=>`<div class="thumb"><img src="${b64}"><span class="del" data-k="${esc(key)}" data-i="${i}">✕</span></div>`).join('');
+  box.querySelectorAll('.del').forEach(d => d.addEventListener('click', () => {
+    IMG[d.dataset.k].splice(parseInt(d.dataset.i), 1);
+    renderThumbs(d.dataset.k);
+  }));
 }
 
 function fieldVal(key){
+  const rc = document.querySelector(`input[type=radio][name="${key}"]:checked`);
+  if(rc) return rc.value;
+  const cbs = document.querySelectorAll(`input[type=checkbox][name="${key}"]:checked`);
+  if(cbs.length) return [...cbs].map(c=>c.value);
   const el = document.getElementById(key);
-  if(!el) return '';
-  if(el.type === 'radio'){ const c = document.querySelector(`input[name="${key}"]:checked`); return c?c.value:''; }
-  return el.value;
+  if(el) return el.value;
+  return '';
 }
 
 function numVal(key){ return parseInt(fieldVal(key)) || 0; }
@@ -259,8 +346,10 @@ function matchStore(){
 function collectValues(){
   const values = {};
   CFG.fields.forEach(f => {
+    if(f.type === 'image'){ values[f.key] = IMG[f.key] || []; return; }
     const v = fieldVal(f.key);
-    values[f.key] = f.type === 'number' ? numVal(f.key) : v;
+    if(f.type === 'number' || f.type === 'rating'){ values[f.key] = parseInt(v) || 0; }
+    else values[f.key] = v;
   });
   return values;
 }
@@ -283,12 +372,11 @@ async function submit(){
 }
 
 function resetForm(){
-  selectedStore = null;
+  selectedStore = null; IMG = {};
   $('storeSearch').value = '';
   $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
   $('mapLink').style.display = 'none';
-  document.querySelectorAll('#fields input[type=number]').forEach(i=>i.value='');
-  document.querySelectorAll('#fields input[type=radio]').forEach(r=>{ if(r.value==='Bình thường'||r.value==='Hoạt động') r.checked=true; });
+  renderFields();  // dựng lại form mặc định
   refresh();
 }
 
