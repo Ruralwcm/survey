@@ -122,10 +122,10 @@
   <div class="warn" id="warnBox"></div>
 
   <button class="btn" id="btnSubmit" disabled>Gửi kết quả</button>
-  <div class="success" id="successBox" style="display:none">
-    <div class="ok">✅ Đã hoàn thành khảo sát!</div>
-    <div class="d" id="successDetail"></div>
-    <button class="btn" style="background:var(--navy);margin-top:6px" onclick="resetForm()">🔍 Khảo sát cửa hàng khác</button>
+  <div class="card" id="unsurveyedCard" style="display:none">
+    <h2>🤝 Cùng nhắc đồng đội làm khảo sát bạn nhé!</h2>
+    <p style="font-size:13px;color:var(--mut);margin-bottom:10px">QLKV <b id="unsurveyedQlkv"></b> — <span id="unsurveyedCount"></span></p>
+    <div id="unsurveyedList" style="max-height:360px;overflow-y:auto;font-size:13px;line-height:1.6"></div>
   </div>
   <div class="foot" id="foot"></div>
 </div>
@@ -161,7 +161,7 @@ async function call(data){
 }
 
 async function init(){
-  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
+  if(GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
   if(!SURVEY_ID){ $('title').textContent = 'Thiếu tham số ?survey='; return; }
   try{
     const [sv, st] = await Promise.all([
@@ -341,9 +341,9 @@ function refresh(){
 }
 
 function updateReady(){
-  const ok = !!(selectedStore && GAS_URL !== '__GAS_URL__' && CFG);
+  const ok = !!(selectedStore && GAS_URL !== 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' && CFG);
   $('btnSubmit').disabled = !ok;
-  $('btnSubmit').textContent = GAS_URL === '__GAS_URL__' ? '⚠️ Chưa cấu hình backend'
+  $('btnSubmit').textContent = GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' ? '⚠️ Chưa cấu hình backend'
     : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
 }
 
@@ -384,6 +384,7 @@ function selectStore(){
     selectedStore = found;
     $('vLine1').textContent = found.sap + ' — ' + found.ten + ' — ' + (found.tinh||'') + ' — ' + (found.huyen||'');
     $('vLine2').textContent = 'GĐV: ' + (found.gdv||'—') + ' — QLKV: ' + (found.qlkv||'—');
+    loadUnsurveyed();
   } else {
     selectedStore = null;
     $('vLine1').textContent = '—';
@@ -405,7 +406,7 @@ function collectValues(){
 
 function confirmSubmit(){
   if(!selectedStore || !CFG) return;
-  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
+  if(GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
   const values = collectValues();
   let html = '<div class="row"><span class="l">Cửa hàng</span><span class="r">' + esc(selectedStore.sap) + ' · ' + esc(selectedStore.ten) + '</span></div>';
   html += '<div class="row"><span class="l">GĐV - QLKV</span><span class="r">' + esc(selectedStore.gdv||'') + ' — ' + esc(selectedStore.qlkv||'') + '</span></div>';
@@ -434,10 +435,10 @@ async function doSubmit(){
   try{
     const res = await call({action:'submit', id:SURVEY_ID, store:d.store, values:d.values});
     if(res.ok){
-      $('btnSubmit').style.display = 'none';
-      $('successBox').style.display = 'block';
-      $('successDetail').textContent = selectedStore.sap + ' · ' + selectedStore.ten + ' — ' + (selectedStore.gdv||'');
       showToast('✅ Đã gửi thành công!');
+      if(selectedStore){ doneSaps.push(selectedStore.sap); lastQlkv = selectedStore.qlkv; }
+      showUnsurveyed();
+      resetForm();
     } else {
       showToast('⚠️ ' + (res.error||'Lỗi'), true);
       $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
@@ -451,7 +452,7 @@ async function doSubmit(){
 function resetForm(){
   selectedStore = null; IMG = {};
   $('vLine1').textContent = '—'; $('vLine2').textContent = '—';
-  $('successBox').style.display = 'none'; $('btnSubmit').style.display = 'block';
+  $('btnSubmit').style.display = 'block';
   $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Gửi kết quả';
   renderFields();
   buildMien();
@@ -463,6 +464,41 @@ function showToast(msg, isErr){
   const t = $('toast'); t.textContent = msg;
   t.style.background = isErr ? '#b91c1c' : '#166534';
   t.classList.add('show'); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// --- DS CH chưa khảo sát ---
+let doneSaps = [], lastQlkv = '';
+
+async function loadUnsurveyed(){
+  if(!selectedStore || !selectedStore.qlkv) return;
+  lastQlkv = selectedStore.qlkv;
+  try{
+    const r = await call({action:'getDoneSaps', id:SURVEY_ID});
+    doneSaps = r.ok ? (r.saps || []) : [];
+  }catch(e){ doneSaps = []; }
+}
+
+function showUnsurveyed(){
+  if(!lastQlkv){ $('unsurveyedCard').style.display = 'none'; return; }
+  const qStores = STORES.filter(s => s.qlkv === lastQlkv);
+  const doneSet = new Set(doneSaps);
+  const undone = qStores.filter(s => !doneSet.has(s.sap));
+  $('unsurveyedQlkv').textContent = lastQlkv;
+  $('unsurveyedCount').textContent = undone.length + '/' + qStores.length + ' CH chưa làm';
+  if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả đồng đội đã hoàn thành khảo sát! 🎉</div>'; }
+  else {
+    const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+    let html = '';
+    gdvs.forEach(g => {
+      const gStores = undone.filter(s=>s.gdv===g);
+      html += '<div style="font-weight:700;color:var(--navy);margin-top:8px">' + esc(g) + ' · ' + gStores.length + ' CH</div>';
+      gStores.forEach(s => {
+        html += '<div style="padding-left:8px">' + esc(s.sap) + ' · ' + esc(s.ten) + ' · ' + esc(s.tinh||'') + '</div>';
+      });
+    });
+    $('unsurveyedList').innerHTML = html;
+  }
+  $('unsurveyedCard').style.display = 'block';
 }
 
 $('selMien').addEventListener('change', buildVung);
