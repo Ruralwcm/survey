@@ -161,8 +161,7 @@ async function call(data){
 }
 
 async function init(){
-  if(GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
-  if(!SURVEY_ID){ $('title').textContent = 'Thiếu tham số ?survey='; return; }
+  if(!SURVEY_ID){ $('title').textContent = 'Thiếu tham số ?s='; return; }
   try{
     const [sv, st] = await Promise.all([
       call({action:'getSurvey', id:SURVEY_ID}),
@@ -341,10 +340,9 @@ function refresh(){
 }
 
 function updateReady(){
-  const ok = !!(selectedStore && GAS_URL !== 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' && CFG);
+  const ok = !!(selectedStore && CFG);
   $('btnSubmit').disabled = !ok;
-  $('btnSubmit').textContent = GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' ? '⚠️ Chưa cấu hình backend'
-    : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
+  $('btnSubmit').textContent = !CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi');
 }
 
 function distinct(arr){ return [...new Set(arr)].sort((a,b)=>String(a).localeCompare(String(b),'vi')); }
@@ -406,7 +404,6 @@ function collectValues(){
 
 function confirmSubmit(){
   if(!selectedStore || !CFG) return;
-  if(GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
   const values = collectValues();
   let html = '<div class="row"><span class="l">Cửa hàng</span><span class="r">' + esc(selectedStore.sap) + ' · ' + esc(selectedStore.ten) + '</span></div>';
   html += '<div class="row"><span class="l">GĐV - QLKV</span><span class="r">' + esc(selectedStore.gdv||'') + ' — ' + esc(selectedStore.qlkv||'') + '</span></div>';
