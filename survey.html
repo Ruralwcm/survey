@@ -124,7 +124,7 @@ async function call(data){
 }
 
 async function init(){
-  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
+  if(GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
   if(!SURVEY_ID){ $('title').textContent = 'Thiếu tham số ?survey='; return; }
   try{
     const [sv, st] = await Promise.all([
@@ -232,9 +232,9 @@ function refresh(){
 }
 
 function updateReady(){
-  const ok = !!(selectedStore && GAS_URL !== '__GAS_URL__' && CFG);
+  const ok = !!(selectedStore && GAS_URL !== 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' && CFG);
   $('btnSubmit').disabled = !ok;
-  $('btnSubmit').textContent = GAS_URL === '__GAS_URL__' ? '⚠️ Chưa cấu hình backend'
+  $('btnSubmit').textContent = GAS_URL === 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec' ? '⚠️ Chưa cấu hình backend'
     : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
 }
 
