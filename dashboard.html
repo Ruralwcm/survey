@@ -86,7 +86,7 @@
 
 <script>
 const GAS_URL = '__GAS_URL__';
-const SID = new URLSearchParams(location.search).get('survey') || '';
+const SID = new URLSearchParams(location.search).get('survey') || new URLSearchParams(location.search).get('s') || '';
 let CFG = null, ROWS = [], TOTAL = 0;
 let TOKEN = sessionStorage.getItem('sv_token_' + SID) || '';
 const $ = id => document.getElementById(id);
