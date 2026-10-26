@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Khảo sát</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --red:#d71920; --navy:#1a3c6e; --gold:#ffc107; --green:#1e8e4e;
+    --bg:#f4f6fb; --card:#fff; --line:#e5e9f2; --txt:#1c2434; --mut:#6b7280; }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{font-family:'Be Vietnam Pro',system-ui,sans-serif; background:var(--bg); color:var(--txt);
+    min-height:100vh; padding:16px; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:560px; margin:0 auto}
+  .head{background:linear-gradient(135deg,var(--navy),#2c4a8a); color:#fff; border-radius:16px;
+    padding:20px 20px 22px; box-shadow:0 8px 24px rgba(26,60,110,.18)}
+  .head h1{font-size:21px; font-weight:800; line-height:1.3}
+  .head p{font-size:13px; opacity:.85; margin-top:6px}
+  .badge{display:inline-block; background:rgba(255,255,255,.16); padding:4px 10px; border-radius:20px;
+    font-size:12px; margin-top:10px}
+  .card{background:var(--card); border-radius:14px; padding:18px; margin-top:14px;
+    box-shadow:0 2px 10px rgba(20,30,60,.06); border:1px solid var(--line)}
+  .card h2{font-size:15px; font-weight:700; color:var(--navy); margin-bottom:14px}
+  label{font-size:12.5px; font-weight:600; color:var(--mut); display:block; margin:12px 0 6px}
+  input,select,textarea{width:100%; font-size:15px; font-family:inherit; padding:12px 14px;
+    border:1.5px solid var(--line); border-radius:10px; background:#fafbfd; color:var(--txt); outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--navy); background:#fff}
+  .store-info{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px}
+  .store-info .it{background:#f6f8fc; border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+  .store-info .it .k{font-size:11px; color:var(--mut); margin-bottom:2px}
+  .store-info .it .v{font-size:14px; font-weight:600}
+  .maplink{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--navy);
+    text-decoration:none; background:#eef3fb; padding:9px 14px; border-radius:10px}
+  .sec{border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:12px; background:#fff}
+  .sec .st{display:flex; align-items:center; gap:14px}
+  .sec .st .name{flex:1; font-size:14.5px; font-weight:700}
+  .radios{display:flex; gap:8px; flex-wrap:wrap}
+  .radios label{margin:0; font-size:13px; font-weight:600; color:#4b5563; cursor:pointer;
+    padding:8px 14px; border:1.5px solid var(--line); border-radius:20px; background:#fff; white-space:nowrap}
+  .radios input{display:none}
+  .radios label:has(input:checked){border-color:var(--navy); color:var(--navy); background:#eef3fb}
+  .num{display:none; margin-top:10px}
+  .num.show{display:block}
+  .num input{max-width:160px; font-size:16px; font-weight:700}
+  .sum{background:linear-gradient(135deg,var(--gold),#ffd54f); border-radius:14px; padding:18px;
+    margin-top:14px; display:flex; align-items:center; gap:14px}
+  .sum .big{font-size:30px; font-weight:800; line-height:1}
+  .sum .lbl{font-size:13px; font-weight:600; color:#5c4a00}
+  .warn{display:none; background:var(--red); color:#fff; border-radius:12px; padding:14px 16px;
+    margin-top:12px; font-weight:700; font-size:14px; line-height:1.45}
+  .warn.show{display:block; animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .btn{width:100%; margin-top:16px; background:var(--red); color:#fff; border:none; border-radius:12px;
+    padding:15px; font-size:16px; font-weight:800; font-family:inherit; cursor:pointer;
+    box-shadow:0 6px 18px rgba(215,25,32,.3); transition:.15s}
+  .btn:active{transform:scale(.98)} .btn:disabled{opacity:.5; cursor:not-allowed}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(80px);
+    background:#166534; color:#fff; padding:13px 22px; border-radius:12px; font-weight:600; font-size:14px;
+    transition:.3s; box-shadow:0 8px 24px rgba(0,0,0,.2); z-index:50}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .foot{text-align:center; color:var(--mut); font-size:11.5px; margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1 id="title">Khảo sát</h1>
+    <p id="subtitle"></p>
+    <span class="badge" id="regionBadge" style="display:none"></span>
+  </div>
+
+  <div class="card">
+    <h2>1️⃣ Chọn cửa hàng</h2>
+    <label for="storeSearch">Tìm theo Mã SAP hoặc Tên cửa hàng</label>
+    <input id="storeSearch" list="storeList" placeholder="Nhập tên hoặc mã SAP..." autocomplete="off">
+    <datalist id="storeList"></datalist>
+    <div class="store-info">
+      <div class="it"><div class="k">Tỉnh/TP</div><div class="v" id="vTinh">—</div></div>
+      <div class="it"><div class="k">Quận/Huyện</div><div class="v" id="vHuyen">—</div></div>
+      <div class="it"><div class="k">QLKV</div><div class="v" id="vQlkv">—</div></div>
+      <div class="it"><div class="k">GĐV</div><div class="v" id="vGdv">—</div></div>
+    </div>
+    <a id="mapLink" href="#" target="_blank" style="display:none" class="maplink">📍 Xem vị trí cửa hàng trên bản đồ</a>
+  </div>
+
+  <div class="card">
+    <h2>2️⃣ Nội dung khảo sát</h2>
+    <div id="fields"></div>
+  </div>
+
+  <div class="sum" id="sumBox" style="display:none">
+    <div class="big" id="sumVal">0</div>
+    <div class="lbl" id="sumLbl">Tổng</div>
+  </div>
+  <div class="warn" id="warnBox"></div>
+
+  <button class="btn" id="btnSubmit" disabled>Gửi kết quả</button>
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ⚠️ Dán URL Web App (Survey Engine) vào đây:
+const GAS_URL = '__GAS_URL__';
+const SURVEY_ID = new URLSearchParams(location.search).get('survey') || '';
+
+let CFG = null, STORES = [], selectedStore = null;
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+async function call(data){
+  const r = await fetch(GAS_URL, { method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) });
+  return r.json();
+}
+
+async function init(){
+  if(GAS_URL === '__GAS_URL__'){ $('btnSubmit').textContent = '⚠️ Chưa cấu hình backend (GAS_URL)'; return; }
+  if(!SURVEY_ID){ $('title').textContent = 'Thiếu tham số ?survey='; return; }
+  try{
+    const [sv, st] = await Promise.all([
+      call({action:'getSurvey', id:SURVEY_ID}),
+      call({action:'getStores', region:''})
+    ]);
+    // lấy region sau khi có config
+    if(!sv.ok){ $('title').textContent = sv.error || 'Lỗi'; return; }
+    CFG = sv.config;
+    $('title').textContent = CFG.title;
+    $('subtitle').textContent = CFG.subtitle || '';
+    if(CFG.region){ $('regionBadge').textContent = '📍 ' + CFG.region; $('regionBadge').style.display='inline-block'; }
+    document.title = CFG.title;
+
+    // load stores với region đúng
+    const st2 = await call({action:'getStores', region:CFG.region || ''});
+    if(st2.ok) STORES = st2.stores || [];
+    const dl = $('storeList');
+    dl.innerHTML = STORES.map(s=>`<option value="${esc(s.sap)} · ${esc(s.ten)}">`).join('');
+
+    renderFields();
+    refresh();
+  }catch(e){ $('title').textContent = 'Không kết nối được máy chủ'; }
+}
+
+function renderFields(){
+  const box = $('fields');
+  box.innerHTML = '';
+  CFG.fields.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'sec';
+    wrap.id = 'fld_' + f.key;
+    wrap.dataset.showKey = f.showWhen ? Object.keys(f.showWhen)[0] : '';
+    wrap.dataset.showVal = f.showWhen ? f.showWhen[Object.keys(f.showWhen)[0]] : '';
+
+    let inner = `<div class="st"><div class="name">${esc(f.label)}</div>`;
+    if(f.type === 'radio'){
+      inner += `<div class="radios">` + f.options.map((o,i)=>
+        `<label><input type="radio" name="${esc(f.key)}" value="${esc(o)}" ${i===0?'checked':''}><span>${esc(o)}</span></label>`
+      ).join('') + `</div>`;
+      inner += `</div>`;
+    } else if(f.type === 'select'){
+      inner += `<select id="${esc(f.key)}">` + f.options.map(o=>`<option>${esc(o)}</option>`).join('') + `</select>`;
+      inner += `</div>`;
+    } else if(f.type === 'number'){
+      inner += `<div class="num show"><input id="${esc(f.key)}" type="number" min="0" inputmode="numeric" placeholder="0"></div></div>`;
+    } else if(f.type === 'textarea'){
+      inner += `</div><textarea id="${esc(f.key)}" rows="3"></textarea>`;
+    } else {
+      inner += `</div><input id="${esc(f.key)}" type="text">`;
+    }
+    wrap.innerHTML = inner;
+    box.appendChild(wrap);
+  });
+
+  // listeners
+  document.querySelectorAll('input[name]').forEach(el => el.addEventListener('change', refresh));
+  document.querySelectorAll('#fields select').forEach(el => el.addEventListener('change', refresh));
+
+  if(CFG.sum){
+    $('sumBox').style.display = 'flex';
+    $('sumLbl').textContent = CFG.sum.label || 'Tổng';
+  } else $('sumBox').style.display = 'none';
+}
+
+function fieldVal(key){
+  const el = document.getElementById(key);
+  if(!el) return '';
+  if(el.type === 'radio'){ const c = document.querySelector(`input[name="${key}"]:checked`); return c?c.value:''; }
+  return el.value;
+}
+
+function numVal(key){ return parseInt(fieldVal(key)) || 0; }
+
+function totalSum(){
+  if(!CFG.sum || !CFG.sum.keys) return 0;
+  return CFG.sum.keys.reduce((a,k)=>a+numVal(k), 0);
+}
+
+function refresh(){
+  // showWhen visibility
+  CFG.fields.forEach(f => {
+    const wrap = $('fld_' + f.key);
+    if(!f.showWhen){ wrap.style.display = ''; return; }
+    const k = wrap.dataset.showKey, v = wrap.dataset.showVal;
+    const show = fieldVal(k) === v;
+    wrap.style.display = show ? '' : 'none';
+    // number sub-field highlight
+    const num = wrap.querySelector('.num');
+    if(num) num.classList.toggle('show', show || !f.showWhen);
+  });
+
+  if(CFG.sum){
+    const t = totalSum();
+    $('sumVal').textContent = t;
+    const warnBox = $('warnBox');
+    if(CFG.sum.warn && t >= CFG.sum.warn){
+      warnBox.textContent = '⚠️ ' + (CFG.sum.warnText || (CFG.sum.label + ' ≥ ' + CFG.sum.warn));
+      warnBox.classList.add('show');
+    } else {
+      warnBox.classList.remove('show');
+    }
+  }
+  updateReady();
+}
+
+function updateReady(){
+  const ok = !!(selectedStore && GAS_URL !== '__GAS_URL__' && CFG);
+  $('btnSubmit').disabled = !ok;
+  $('btnSubmit').textContent = GAS_URL === '__GAS_URL__' ? '⚠️ Chưa cấu hình backend'
+    : (!CFG ? 'Đang tải...' : (selectedStore ? 'Gửi kết quả' : 'Chọn cửa hàng để gửi'));
+}
+
+function matchStore(){
+  const v = $('storeSearch').value.trim();
+  const found = STORES.find(s => `${s.sap} · ${s.ten}` === v);
+  if(found){
+    selectedStore = found;
+    $('vTinh').textContent = found.tinh || '—';
+    $('vHuyen').textContent = found.huyen || '—';
+    $('vQlkv').textContent = found.qlkv || '—';
+    $('vGdv').textContent = found.gdv || '—';
+    $('storeSearch').style.borderColor = 'var(--green)';
+    const ml = $('mapLink');
+    if(found.lat && found.lng && parseFloat(found.lat) && parseFloat(found.lng)){
+      ml.href = 'https://www.google.com/maps/search/?api=1&query=' + found.lat + ',' + found.lng;
+      ml.style.display = 'inline-block';
+    } else ml.style.display = 'none';
+  } else {
+    selectedStore = null;
+    $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
+    $('storeSearch').style.borderColor = 'var(--line)';
+    $('mapLink').style.display = 'none';
+  }
+  updateReady();
+}
+
+function collectValues(){
+  const values = {};
+  CFG.fields.forEach(f => {
+    const v = fieldVal(f.key);
+    values[f.key] = f.type === 'number' ? numVal(f.key) : v;
+  });
+  return values;
+}
+
+async function submit(){
+  if(!selectedStore) return;
+  const d = { store: {
+    sap:selectedStore.sap, ten:selectedStore.ten, tinh:selectedStore.tinh,
+    huyen:selectedStore.huyen, qlkv:selectedStore.qlkv, gdv:selectedStore.gdv
+  }, values: collectValues() };
+  $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Đang gửi...';
+  try{
+    const res = await call({action:'submit', id:SURVEY_ID, store:d.store, values:d.values});
+    if(res.ok){ showToast(res.warn ? '✅ Đã gửi! ' + res.warn : '✅ Đã gửi thành công!'); resetForm(); }
+    else { showToast('⚠️ ' + (res.error||'Lỗi'), true); $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả'; }
+  }catch(e){
+    showToast('⚠️ Không kết nối được máy chủ', true);
+    $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả';
+  }
+}
+
+function resetForm(){
+  selectedStore = null;
+  $('storeSearch').value = '';
+  $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
+  $('mapLink').style.display = 'none';
+  document.querySelectorAll('#fields input[type=number]').forEach(i=>i.value='');
+  document.querySelectorAll('#fields input[type=radio]').forEach(r=>{ if(r.value==='Bình thường'||r.value==='Hoạt động') r.checked=true; });
+  refresh();
+}
+
+let tt;
+function showToast(msg, isErr){
+  const t = $('toast'); t.textContent = msg;
+  t.style.background = isErr ? '#b91c1c' : '#166534';
+  t.classList.add('show'); clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+$('storeSearch').addEventListener('input', matchStore);
+$('storeSearch').addEventListener('change', matchStore);
+$('btnSubmit').addEventListener('click', submit);
+$('foot').innerHTML = '<a href="dashboard.html?survey=' + esc(SURVEY_ID) + '" style="color:var(--navy);font-weight:600">📊 Dashboard</a> · Khảo sát';
+
+init();
+</script>
+</body>
+</html>
