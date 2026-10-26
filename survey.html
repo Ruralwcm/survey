@@ -98,7 +98,8 @@
   <button class="btn" id="btnSubmit" disabled>Gửi kết quả</button>
 
   <div class="card" id="unsurveyedCard" style="display:none">
-    <h2>📋 CH chưa khảo sát — <span id="unsurveyedQlkv"></span></h2>
+    <h2>🤝 Cùng nhắc đồng đội làm khảo sát bạn nhé!</h2>
+    <p style="font-size:13px;color:var(--mut);margin-bottom:10px">QLKV <b id="unsurveyedQlkv"></b> — <span id="unsurveyedCount"></span></p>
     <div id="unsurveyedList" style="max-height:360px;overflow-y:auto;font-size:13px;line-height:1.6"></div>
   </div>
 
@@ -263,24 +264,49 @@ async function matchStore(){
   updateReady();
 }
 
-let doneSaps = [];
+let doneSaps = [], lastQlkv = '';
 async function loadUnsurveyed(){
   if(!selectedStore || !selectedStore.qlkv) return;
+  lastQlkv = selectedStore.qlkv;
   try{
     const r = await call({action:'getDoneSaps', id:SURVEY_ID});
     doneSaps = r.ok ? (r.saps || []) : [];
   }catch(e){ doneSaps = []; }
-  renderUnsurveyed();
+}
+
+function showUnsurveyed(){
+  if(!lastQlkv){ $('unsurveyedCard').style.display = 'none'; return; }
+  const qlkv = lastQlkv;
+  const qStores = STORES.filter(s => s.qlkv === qlkv);
+  const doneSet = new Set(doneSaps);
+  const undone = qStores.filter(s => !doneSet.has(s.sap));
+  $('unsurveyedQlkv').textContent = qlkv;
+  $('unsurveyedCount').textContent = undone.length + '/' + qStores.length + ' CH chưa làm';
+  if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả đồng đội đã hoàn thành khảo sát! 🎉</div>'; }
+  else {
+    const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
+    let html = '';
+    gdvs.forEach(g => {
+      const gStores = undone.filter(s=>s.gdv===g);
+      html += `<div style="font-weight:700;color:var(--navy);margin-top:8px">${esc(g)} · ${gStores.length} CH</div>`;
+      gStores.forEach(s => {
+        html += `<div style="padding-left:8px">${esc(s.sap)} · ${esc(s.ten)} · ${esc(s.tinh||'')}</div>`;
+      });
+    });
+    $('unsurveyedList').innerHTML = html;
+  }
+  $('unsurveyedCard').style.display = 'block';
 }
 
 function renderUnsurveyed(){
-  if(!selectedStore || !selectedStore.qlkv){ $('unsurveyedCard').style.display = 'none'; return; }
+  if(!selectedStore || !selectedStore.qlkv){ return; }
   const qlkv = selectedStore.qlkv;
   const qStores = STORES.filter(s => s.qlkv === qlkv);
   const doneSet = new Set(doneSaps);
   const undone = qStores.filter(s => !doneSet.has(s.sap));
-  $('unsurveyedQlkv').textContent = qlkv + ' · ' + undone.length + '/' + qStores.length + ' CH';
-  if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả CH đã được khảo sát!</div>'; }
+  $('unsurveyedQlkv').textContent = qlkv;
+  $('unsurveyedCount').textContent = undone.length + '/' + qStores.length + ' CH chưa làm';
+  if(!undone.length){ $('unsurveyedList').innerHTML = '<div style="color:var(--green);font-weight:600">✅ Tất cả đồng đội đã hoàn thành khảo sát! 🎉</div>'; }
   else {
     const gdvs = [...new Set(undone.map(s=>s.gdv).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'vi'));
     let html = '';
@@ -314,7 +340,7 @@ async function submit(){
   $('btnSubmit').disabled = true; $('btnSubmit').textContent = 'Đang gửi...';
   try{
     const res = await call({action:'submit', id:SURVEY_ID, store:d.store, values:d.values});
-    if(res.ok){ showToast(res.warn ? '✅ Đã gửi! ' + res.warn : '✅ Đã gửi thành công!'); if(selectedStore){ doneSaps.push(selectedStore.sap); } resetForm(); }
+    if(res.ok){ showToast(res.warn ? '✅ Đã gửi! ' + res.warn : '✅ Đã gửi thành công!'); if(selectedStore){ doneSaps.push(selectedStore.sap); } showUnsurveyed(); resetForm(); }
     else { showToast('⚠️ ' + (res.error||'Lỗi'), true); $('btnSubmit').disabled = false; $('btnSubmit').textContent = 'Gửi kết quả'; }
   }catch(e){
     showToast('⚠️ Không kết nối được máy chủ', true);
@@ -327,7 +353,6 @@ function resetForm(){
   $('storeSearch').value = '';
   $('vTinh').textContent = $('vHuyen').textContent = $('vQlkv').textContent = $('vGdv').textContent = '—';
   $('mapLink').style.display = 'none';
-  $('unsurveyedCard').style.display = 'none';
   document.querySelectorAll('#fields input[type=number]').forEach(i=>i.value='');
   document.querySelectorAll('#fields input[type=radio]').forEach(r=>{ if(r.value==='Bình thường'||r.value==='Hoạt động') r.checked=true; });
   refresh();
