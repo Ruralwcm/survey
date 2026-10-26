@@ -131,7 +131,7 @@
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.5</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.6</span></div>
   </div>
 </div>
 
@@ -162,8 +162,8 @@ async function login(){
   try{
     const res = await call({action:'getResults', id:SID, token:pwd});
     if(res.ok){ CFG = res.config; ROWS = res.rows || []; TOKEN = pwd; sessionStorage.setItem('sv_token_'+SID, TOKEN); await enterando(); }
-    else $('loginErr').style.display = 'block';
-  }catch(e){ $('loginErr').style.display = 'block'; }
+    else { $('loginErr').textContent = res.error || 'Sai mật khẩu, thử lại'; $('loginErr').style.display = 'block'; }
+  }catch(e){ $('loginErr').textContent = 'Lỗi kết nối: '+e.message; $('loginErr').style.display = 'block'; }
 }
 
 async function enterando(){
