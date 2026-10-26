@@ -377,12 +377,12 @@ function buildTopQlkv() {
   const top = all.slice(0, 20);
   const sumLabel = (CFG.sum || {}).label || 'Tổng';
   const warnLabel = (CFG.sum || {}).warnLabel || 'CH có vấn đề';
-  let html = '<table class="gdv-table"><colgroup><col class="col-gdv"><col class="col-gdv"><col class="col-num"><col class="col-num"><col class="col-bar"><col class="col-pct"><col class="col-warn"><col class="col-sum"></colgroup><thead><tr>';
+  let html = '<table class="gdv-table"><colgroup><col style="width:19%"><col style="width:19%"><col style="width:8%"><col style="width:8%"><col style="width:14%"><col style="width:5%"><col style="width:15%"><col style="width:12%"></colgroup><thead><tr>';
   html += thSort('gdv', SORT_T, 'GĐV') + '<th class="sortable col-gdv">QLKV</th>' + thSort('t', SORT_T, 'CH KS') + thSort('d', SORT_T, 'Đã làm') + '<th class="bar-cell col-bar">Tỷ lệ</th>' + thSort('pct', SORT_T, '%') + thSort('warn', SORT_T, warnLabel) + thSort('sumTot', SORT_T, sumLabel);
   html += '</tr></thead><tbody>';
   top.forEach(q => {
     html += `<tr>
-      <td class="col-gdv">${esc(q.gdv)}</td><td class="col-gdv qlkv-name" style="padding-left:4px;font-weight:500">${esc(q.qlkv)}</td>
+      <td class="col-gdv" style="font-weight:600">${esc(q.gdv)}</td><td class="col-gdv" style="padding-left:8px;font-weight:500">${esc(q.qlkv)}</td>
       <td class="col-num">${q.t}</td><td class="col-num">${q.d}</td>
       <td class="bar-cell col-bar"><i style="width:${q.pct}%"></i></td><td class="col-pct">${q.pct}%</td>
       <td class="col-warn" style="color:${q.warn?'var(--red)':'inherit'}">${q.warn||'—'}</td><td class="col-sum">${q.sum||'—'}</td></tr>`;
