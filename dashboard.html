@@ -61,14 +61,14 @@
   .gdv-row .stat{font-size:12px;white-space:nowrap;color:var(--mut);min-width:70px;text-align:right}
   .qlkv-sub{margin-left:20px;padding:4px 0;border-bottom:1px solid #f0f2f6}
   .gdv-table{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:4px;font-size:12.5px}
-  .gdv-table th{background:#f6f8fc;color:var(--mut);font-size:10.5px;font-weight:700;padding:8px 4px;text-align:right;border-bottom:2px solid var(--line);white-space:nowrap}
-  .gdv-table th.left{text-align:left}
-  .gdv-table td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-  .gdv-table td.left{text-align:left;font-weight:600}
-  .gdv-table .bar-cell{min-width:0}
+  .gdv-table th{background:#f6f8fc;color:var(--mut);font-size:10.5px;font-weight:700;padding:8px 6px;text-align:center;border-bottom:2px solid var(--line);white-space:nowrap}
+  .gdv-table th.col-gdv{text-align:left}
+  .gdv-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gdv-table td.col-gdv{text-align:left;font-weight:600}
+  .gdv-table .bar-cell{padding:7px 6px;vertical-align:middle}
   .gdv-table .bar-cell i{display:block;height:7px;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:5px}
-  .gdv-table .qlkv-name{padding-left:20px;font-weight:500;font-size:12px}
-  .col-gdv{width:19%}.col-num{width:9%}.col-bar{width:16%}.col-pct{width:7%}.col-warn{width:21%}.col-sum{width:19%}
+  .gdv-table .qlkv-name{font-weight:500;font-size:12px;padding-left:22px}
+  .col-gdv{width:23%}.col-num{width:9%}.col-bar{width:14%}.col-pct{width:6%}.col-warn{width:21%}.col-sum{width:18%}
   .gdv-sub{display:none}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
     z-index:999; padding:14px}
@@ -277,7 +277,7 @@ function buildGdvSection(){
   const sumLabel = (CFG.sum||{}).label||'Tổng';
   const warnLabel = (CFG.sum||{}).warnLabel||'CH có vấn đề';
   let html = `<table class="gdv-table"><thead><tr>
-    <th class="left col-gdv">GĐV</th><th class="col-num">CH KS</th><th class="col-num">Đã làm</th><th class="bar-cell col-bar">Tỷ lệ</th><th class="col-pct">%</th>
+    <th class="col-gdv">GĐV</th><th class="col-num">CH KS</th><th class="col-num">Đã làm</th><th class="bar-cell col-bar">Tỷ lệ</th><th class="col-pct">%</th>
     <th class="col-warn">${esc(warnLabel)}</th><th class="col-sum">${esc(sumLabel)}</th></tr></thead><tbody>`;
 
   gdvs.forEach(gdv => {
@@ -290,7 +290,7 @@ function buildGdvSection(){
     const warn = rGdv.filter(isWarn).length;
     const sumTot = rGdv.reduce((a,r)=>a+(r.total||0),0);
     html += `<tr class="grow" onclick="toggleGdv(this,'${cls}')" style="cursor:pointer">
-      <td class="left col-gdv"><span class="ar">▶</span> ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
+      <td class="col-gdv"><span class="ar">▶</span> ${esc(gdv)}</td><td class="col-num">${t}</td><td class="col-num">${d}</td>
       <td class="bar-cell col-bar"><i style="width:${pct}%"></i></td><td class="col-pct">${pct}%</td>
       <td class="col-warn" style="color:${warn?'var(--red)':'inherit'}">${warn||'—'}</td><td class="col-sum">${sumTot||'—'}</td></tr>`;
     // QLKV rows — same table, same column widths
@@ -304,7 +304,7 @@ function buildGdvSection(){
       const qwarn = rQ.filter(isWarn).length;
       const qsum = rQ.reduce((a,r)=>a+(r.total||0),0);
       html += `<tr class="gdv-sub ${cls}" style="display:none">
-        <td class="left col-gdv"><span class="ar" style="visibility:hidden">▶</span> ${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
+        <td class="col-gdv qlkv-name">${esc(q)}</td><td class="col-num">${qt}</td><td class="col-num">${qd}</td>
         <td class="bar-cell col-bar"><i style="width:${qpct}%"></i></td><td class="col-pct">${qpct}%</td>
         <td class="col-warn" style="color:${qwarn?'var(--red)':'inherit'}">${qwarn||'—'}</td><td class="col-sum">${qsum||'—'}</td></tr>`;
     });
