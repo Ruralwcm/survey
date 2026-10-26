@@ -86,6 +86,25 @@
       </div>
     </div>
     <div class="card">
+      <h2>🎯 Khai báo CH khảo sát</h2>
+      <div class="cas">
+        <div><label>Vùng (GĐV)</label><select id="tVung"><option value="">— Chọn —</option></select></div>
+        <div><label>QLKV</label><select id="tQlkv"><option value="">— Chọn —</option></select></div>
+        <div><label>Cửa hàng</label><select id="tCh"><option value="">— Chọn —</option></select></div>
+      </div>
+      <button class="btn btn-sm" onclick="addTargetCH()" style="margin-top:6px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">➕ Thêm CH vào danh sách</button>
+      <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+        <label style="font-size:11.5px;font-weight:600;color:var(--mut)">Hoặc dán mã SAP (cách bởi dấu phẩy hoặc xuống dòng)</label>
+        <textarea id="tPaste" rows="3" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13px" placeholder="VD: 2BQ9, 5898"></textarea>
+        <button class="btn btn-sm" onclick="pasteTargets()" style="margin-top:4px;width:auto;padding:8px 16px;font-size:13px;background:var(--navy)">📋 Thêm vào danh sách</button>
+      </div>
+      <div id="tList" style="margin-top:12px">
+        <div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>
+      </div>
+      <button class="btn" id="tSaveBtn" onclick="saveTargets()" style="margin-top:10px;background:var(--navy)">💾 Lưu danh sách CH khảo sát</button>
+      <div class="err" id="tErr"></div>
+    </div>
+    <div class="card">
       <h2>Danh sách khảo sát <span id="rowCount" style="color:var(--mut);font-weight:500"></span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
@@ -96,7 +115,7 @@
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyF8_swNkrQnk_x40QeA-3hTLiLvOAonqa7wpGpt_R7HBuH7hllhDtzYqerfOZay2N_/exec';
 const SID = new URLSearchParams(location.search).get('survey') || new URLSearchParams(location.search).get('s') || '';
-let CFG = null, ROWS = [], STORES = [];
+let CFG = null, ROWS = [], STORES = [], TARGET = { saps: [], loaded: false };
 let TOKEN = sessionStorage.getItem('sv_token_' + SID) || '';
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -120,6 +139,7 @@ async function login(){
 
 async function enterando(){
   try{ const s = await call({action:'getStores', region:''}); if(s.ok) STORES = s.stores || []; }catch(e){}
+  await loadTargets();
   $('loginBox').style.display = 'none'; $('dash').style.display = 'block';
   $('dTitle').textContent = CFG ? CFG.title : SID;
   $('updated').textContent = new Date().toLocaleString('vi-VN');
@@ -150,7 +170,71 @@ function buildCh(){
   $('selCh').innerHTML = '<option value="">— Cửa hàng —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
 }
 
+async function loadTargets(){
+  try{ const r = await call({action:'getTargets',id:SID});
+    if(r.ok){ TARGET.saps = r.saps || []; TARGET.loaded = true; } }catch(e){}
+  renderTargetList(); buildTVung();
+}
+
+function buildTVung(){
+  const m = $('selMien').value;
+  const gs = distinct(STORES.filter(s=>!m||s.mien===m).map(s=>s.gdv).filter(Boolean));
+  $('tVung').innerHTML = '<option value="">— Chọn —</option>' + gs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  buildTQlkv();
+}
+function buildTQlkv(){
+  const m=$('selMien').value, v=$('tVung').value;
+  const qs=distinct(STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)).map(s=>s.qlkv).filter(Boolean));
+  $('tQlkv').innerHTML = '<option value="">— Chọn —</option>' + qs.map(q=>`<option value="${esc(q)}">${esc(q)}</option>`).join('');
+  buildTCh();
+}
+function buildTCh(){
+  const m=$('selMien').value, v=$('tVung').value, q=$('tQlkv').value;
+  const chs = STORES.filter(s=>(!m||s.mien===m)&&(!v||s.gdv===v)&&(!q||s.qlkv===q));
+  $('tCh').innerHTML = '<option value="">— Chọn —</option>' + chs.map(s=>`<option value="${esc(s.sap)}">${esc(s.sap)} · ${esc(s.ten)}</option>`).join('');
+}
+
+function addTargetCH(){
+  const sap = $('tCh').value; if(!sap) return;
+  if(TARGET.saps.includes(sap)){ $('tErr').textContent='CH đã có trong danh sách'; $('tErr').style.display='block'; return; }
+  $('tErr').style.display='none';
+  TARGET.saps.push(sap);
+  $('tCh').value = ''; renderTargetList();
+}
+function pasteTargets(){
+  const raw = $('tPaste').value; if(!raw.trim()) return;
+  const saps = raw.split(/[,;\n\r]+/).map(s=>s.trim()).filter(Boolean);
+  let added = 0;
+  saps.forEach(sap => { if(!TARGET.saps.includes(sap)){ TARGET.saps.push(sap); added++; } });
+  $('tPaste').value = ''; if(added) renderTargetList();
+}
+function renderTargetList(){
+  const box = $('tList');
+  if(!TARGET.saps.length){
+    box.innerHTML = '<div style="font-size:13px;color:var(--mut)">Chưa có CH nào trong danh sách mục tiêu</div>';
+    return;
+  }
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">';
+  TARGET.saps.forEach((sap,i) => {
+    const s = STORES.find(x=>x.sap===sap) || {};
+    html += `<span style="display:inline-flex;align-items:center;gap:6px;background:#eef3fb;padding:4px 10px;border-radius:16px;font-size:12.5px;font-weight:500">
+      ${esc(sap)} · ${esc(s.ten||'?')} · ${esc(s.gdv||'')}
+      <b style="cursor:pointer;color:var(--red);margin-left:2px" onclick="TARGET.saps.splice(${i},1);renderTargetList()">✕</b></span>`;
+  });
+  html += '</div>';
+  box.innerHTML = html;
+}
+async function saveTargets(){
+  $('tErr').style.display='none';
+  try{
+    const r = await call({action:'setTargets',id:SID, saps:TARGET.saps});
+    if(r.ok){ $('tErr').style.display='block'; $('tErr').style.color='var(--green)'; $('tErr').textContent = '✅ Đã lưu ' + r.count + ' CH mục tiêu'; render(); }
+    else { $('tErr').style.display='block'; $('tErr').textContent=r.error||'Lỗi'; }
+  }catch(e){ $('tErr').style.display='block'; $('tErr').textContent='Lỗi kết nối'; }
+}
+
 function scopeSaps(){
+  if(TARGET.saps.length) return new Set(TARGET.saps);
   const m=$('selMien').value, v=$('selVung').value, q=$('selQlkv').value, c=$('selCh').value;
   let s = STORES.filter(x=>(!m||x.mien===m)&&(!v||x.gdv===v)&&(!q||x.qlkv===q)&&(!c||x.sap===c));
   return new Set(s.map(x=>x.sap));
@@ -168,8 +252,10 @@ function render(){
   const total = scopeSaps().size;
   const done = new Set(scoped.map(r=>r.sap)).size;
   const alert = scoped.filter(isWarn).length;
+  const hasTargets = TARGET.loaded && TARGET.saps.length > 0;
 
-  $('kTotal').textContent = total;
+  $('kTotal').textContent = total || '—';
+  $('kTotal').parentElement.querySelector('.l').textContent = hasTargets ? 'CH mục tiêu' : 'Tổng CH';
   $('kDone').textContent = done;
   const pct = total ? Math.round(done/total*100) : 0;
   $('kPct').textContent = pct + '%';
@@ -224,13 +310,15 @@ function renderTable(){
   $('tableWrap').innerHTML = html;
 }
 
-function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null;
+function logout(){ sessionStorage.removeItem('sv_token_'+SID); TOKEN=''; ROWS=[]; STORES=[]; CFG=null; TARGET={saps:[],loaded:false};
   $('dash').style.display='none'; $('loginBox').style.display='block'; $('pwd').value=''; }
 
-$('selMien').addEventListener('change', ()=>{ buildVung(); render(); });
+$('selMien').addEventListener('change', ()=>{ buildVung(); buildTVung(); render(); });
 $('selVung').addEventListener('change', ()=>{ buildQlkv(); render(); });
 $('selQlkv').addEventListener('change', ()=>{ buildCh(); render(); });
 $('selCh').addEventListener('change', render);
+$('tVung').addEventListener('change', buildTQlkv);
+$('tQlkv').addEventListener('change', buildTCh);
 
 (async function init(){
   if(TOKEN){
