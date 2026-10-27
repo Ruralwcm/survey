@@ -47,6 +47,7 @@
   .logout{float:right; font-size:12px; color:rgba(255,255,255,.85); text-decoration:none;
     background:rgba(255,255,255,.14); padding:6px 12px; border-radius:16px; cursor:pointer}
   .hdr-acts{float:right; display:flex; gap:6px}
+  .head::after{content:'';display:table;clear:both}
   .hdr-btn{background:rgba(255,255,255,.16); color:#fff; border:none; border-radius:16px;
     padding:5px 11px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap}
   .hdr-btn:hover{background:rgba(255,255,255,.26)}
@@ -76,7 +77,7 @@
   .gdv-table td.col-gdv{text-align:left;font-weight:600}
   .gdv-table .bar-cell{padding:7px 6px;vertical-align:middle}
   .gdv-table .bar-cell i{display:block;height:7px;background:linear-gradient(90deg,var(--green),#37b26c);border-radius:5px}
-  .gdv-table .qlkv-name{font-weight:500;font-size:12px;padding-left:22px}
+  .gdv-table .qlkv-name{font-weight:500;font-size:12px}
   .gdv-sub{display:none}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
     z-index:999; padding:14px}
@@ -84,6 +85,21 @@
   .modal h3{font-size:15px;font-weight:800;margin-bottom:12px;color:var(--navy)}
   .btn2{flex:1;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
   .btn2.ghost{background:#f0f2f7;color:var(--txt)}
+  @media(min-width:768px){
+    body{padding:24px}
+    .wrap{max-width:960px}
+    .head{padding:28px}
+    .head h1{font-size:22px}
+    .card{padding:22px;margin-top:16px}
+    .card h2{font-size:16px}
+    .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+    .gdv-table{font-size:13px}
+    .gdv-table th{font-size:11px}
+    .cas{grid-template-columns:repeat(4,1fr)}
+    .filters input{font-size:14px}
+    table{font-size:12px}
+    .modal{padding:22px;max-width:480px}
+  }
 </style>
 </head>
 <body>
@@ -108,7 +124,7 @@
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.31</b> · <span id="storeStatus" style="font-size:12px"></span></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.32</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -150,7 +166,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.31</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.32</span></div>
   </div>
 </div>
 
@@ -358,7 +374,7 @@ function buildGdvSection() {
       <td class="col-warn" style="color:${g.warn?'var(--red)':'inherit'}">${g.warn||'—'}</td><td class="col-sum">${g.sumTot||'—'}</td></tr>`;
     g.qlkvs.forEach(q => {
       html += `<tr class="gdv-sub ${cls}" style="display:none">
-        <td class="col-gdv qlkv-name">${esc(q.qlkv)}</td><td class="col-num">${q.t}</td><td class="col-num">${q.d}</td>
+        <td class="col-gdv qlkv-name"><span class="ar" style="visibility:hidden">▶</span> ${esc(q.qlkv)}</td><td class="col-num">${q.t}</td><td class="col-num">${q.d}</td>
         <td class="bar-cell col-bar"><i style="width:${q.pct}%"></i></td><td class="col-pct">${q.pct}%</td>
         <td class="col-warn" style="color:${q.warn?'var(--red)':'inherit'}">${q.warn||'—'}</td><td class="col-sum">${q.sum||'—'}</td></tr>`;
     });
