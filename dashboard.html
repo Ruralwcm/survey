@@ -124,7 +124,7 @@
         <button class="hdr-btn" onclick="logout()">Đăng xuất</button>
       </div>
       <h1>📊 Tiến độ — <span id="dTitle"></span></h1>
-      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.32</b> · <span id="storeStatus" style="font-size:12px"></span></p>
+      <p>cập nhật: <span id="updated"></span> · <b style="color:var(--navy)" id="verTag">v26.10.33</b> · <span id="storeStatus" style="font-size:12px"></span></p>
     </div>
     <div class="card">
       <h2>Tổng quan</h2>
@@ -154,7 +154,7 @@
         <div><label>Cửa hàng</label><select id="selCh"><option value="">— CH —</option></select></div>
       </div>
       <div class="filters">
-        <input id="fSearch" placeholder="Tìm mã SAP / tên CH..." oninput="renderTable()">
+        <input id="fSearch" placeholder="Tìm mã SAP / tên CH..." oninput="SHOW_ALL=false;renderTable()">
       </div>
     </div>
     <div class="err" id="tErr"></div>
@@ -166,7 +166,7 @@
         </span></h2>
       <div id="tableWrap"><div class="empty">Đang tải...</div></div>
     </div>
-    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.32</span></div>
+    <div class="foot">Dashboard · Survey Engine <span style="color:var(--mut)">v26.10.33</span></div>
   </div>
 </div>
 
@@ -417,7 +417,7 @@ function switchTab(tab) {
   else buildGdvSection();
 }
 
-let gdvOpen = {};
+let gdvOpen = {}, SHOW_ALL = false;
 function toggleGdv(row, cls){
   const rows = document.querySelectorAll('.' + cls);
   const ar = row.querySelector('.ar');
@@ -435,16 +435,18 @@ function renderTable(){
   const scoped = scopedRows();
   const q = $('fSearch').value.trim().toLowerCase();
   const list = scoped.filter(r => !q || (r.ten||'').toLowerCase().includes(q) || (r.sap||'').toLowerCase().includes(q) || (r.qlkv||'').toLowerCase().includes(q));
-  $('rowCount').textContent = '· ' + list.length + '/' + ROWS.length + ' phiếu';
+  const totalN = list.length;
+  const showList = SHOW_ALL ? list : list.slice(0, 30);
+  $('rowCount').textContent = '· ' + showList.length + '/' + totalN + ' phiếu';
 
-  if(!list.length){ $('tableWrap').innerHTML = '<div class="empty">Chưa có dữ liệu</div>'; return; }
+  if(!totalN){ $('tableWrap').innerHTML = '<div class="empty">Chưa có dữ liệu</div>'; return; }
 
   let html = '<table><thead><tr><th>Thời gian</th><th>Mã SAP</th><th>Tên CH</th><th>Tỉnh</th><th>QLKV</th><th>GĐV</th>';
   (CFG.fields||[]).forEach(f => html += `<th>${esc(f.label)}</th>`);
   if(CFG.sum) html += `<th>${esc(CFG.sum.label)}</th><th>Trạng thái</th>`;
   html += '</tr></thead><tbody>';
 
-  for(const r of list){
+  for(const r of showList){
     const w = isWarn(r);
     html += `<tr><td style="white-space:nowrap">${esc(r.ts)}</td><td>${esc(r.sap)}</td><td>${esc(r.ten)}</td><td>${esc(r.tinh)}</td><td>${esc(r.qlkv)}</td><td>${esc(r.gdv)}</td>`;
     (CFG.fields||[]).forEach(f => {
@@ -474,7 +476,15 @@ function renderTable(){
     html += '</tr>';
   }
   html += '</tbody></table>';
+  if(totalN > 30){
+    html += `<div style="text-align:center;margin-top:8px"><button class="hdr-btn" style="color:var(--navy);background:#eef3fb;font-size:12px;padding:7px 16px" onclick="toggleShowAll()">${SHOW_ALL ? '📋 Thu gọn (30 mới nhất)' : '📋 Xem tất cả (' + totalN + ' phiếu)'}</button></div>`;
+  }
   $('tableWrap').innerHTML = '<div class="tbl-scroll">' + html + '</div>';
+}
+
+function toggleShowAll(){
+  SHOW_ALL = !SHOW_ALL;
+  renderTable();
 }
 
 async function refreshData(){
@@ -560,10 +570,10 @@ function resetTargets(){
   render(); $('tErr').style.display='block'; $('tErr').style.color='var(--navy)'; $('tErr').textContent = '✅ Đã chuyển về khảo sát tất cả CH (Storelist)';
 }
 
-$('selMien').addEventListener('change', ()=>{ buildVung(); render(); });
-$('selVung').addEventListener('change', ()=>{ buildQlkv(); render(); });
-$('selQlkv').addEventListener('change', ()=>{ buildCh(); render(); });
-$('selCh').addEventListener('change', render);
+$('selMien').addEventListener('change', ()=>{ buildVung(); SHOW_ALL=false; render(); });
+$('selVung').addEventListener('change', ()=>{ buildQlkv(); SHOW_ALL=false; render(); });
+$('selQlkv').addEventListener('change', ()=>{ buildCh(); SHOW_ALL=false; render(); });
+$('selCh').addEventListener('change', ()=>{ SHOW_ALL=false; render(); });
 
 (async function init(){
   if(TOKEN){
